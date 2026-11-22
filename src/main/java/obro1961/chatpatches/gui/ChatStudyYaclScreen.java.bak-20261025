@@ -1,0 +1,343 @@
+package obro1961.chatpatches.gui;
+
+import dev.isxander.yacl3.api.ButtonOption;
+import dev.isxander.yacl3.api.ConfigCategory;
+import dev.isxander.yacl3.api.Option;
+import dev.isxander.yacl3.api.OptionDescription;
+import dev.isxander.yacl3.api.OptionGroup;
+import dev.isxander.yacl3.api.YetAnotherConfigLib;
+import dev.isxander.yacl3.api.controller.BooleanControllerBuilder;
+import dev.isxander.yacl3.api.controller.ControllerBuilder;
+import dev.isxander.yacl3.api.controller.CyclingListControllerBuilder;
+import dev.isxander.yacl3.api.controller.FloatSliderControllerBuilder;
+import dev.isxander.yacl3.api.controller.IntegerSliderControllerBuilder;
+import dev.isxander.yacl3.api.controller.StringControllerBuilder;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+import obro1961.chatpatches.ChatPatches;
+import obro1961.chatpatches.chatlog.RecordConfig;
+import obro1961.chatpatches.config.Config;
+import obro1961.chatpatches.translate.ApiProvider;
+import obro1961.chatpatches.translate.ConfigStore;
+import obro1961.chatpatches.translate.TranslateConfig;
+import obro1961.chatpatches.tts.ReadAloudConfig;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
+
+/**
+ * 局内配置（YACL 版）。
+ *
+ * <p>分类：总目录 / 翻译 / 朗读 / 右键菜单 / 开发者。
+ * 全部用 YACL 现成控件，不写自绘布局；保存时写回 5 份 json。
+ */
+public final class ChatStudyYaclScreen {
+
+    /** 入站源语言：可以自动检测。 */
+    private static final List<String> SRC_AUTO = List.of("自动检测", "中文", "英语", "日语", "韩语", "俄语", "西班牙语", "法语", "越南语");
+    /** 其它语言项：不带自动检测。 */
+    private static final List<String> LANGS = List.of("中文", "英语", "日语", "韩语", "俄语", "西班牙语", "法语", "越南语");
+    /** 入站目标语言。 */
+    private static final List<String> TARGETS = List.of("简体中文", "English", "日本語", "한국어", "Русский", "Español", "Français", "Tiếng Việt");
+    /** 出站目标语言：可以自动（跟随入站源语言）。 */
+    private static final List<String> TARGETS_AUTO = List.of("自动检测", "简体中文", "English", "日本語", "한국어", "Русский", "Español", "Français", "Tiếng Việt");
+
+    private ChatStudyYaclScreen() {
+    }
+
+    public static Screen create(Screen parent) {
+        TranslateConfig tr = ConfigStore.translate();
+        ReadAloudConfig ra = ConfigStore.readAloud();
+        RecordConfig rec = ConfigStore.record();
+        Config c = ChatPatches.config;
+
+        Runnable save = () -> {
+            ConfigStore.saveTranslate();
+            ConfigStore.saveReadAloud();
+            ConfigStore.saveRecord();
+            Config.serialize();
+        };
+
+        return YetAnotherConfigLib.createBuilder()
+                .title(Component.literal("ChatStudy 设置"))
+                .category(overview(tr, ra, c, save))
+                .category(translate(tr, save))
+                .category(readAloud(ra, save))
+                .category(contextMenu(c, save))
+                .category(developer(tr, rec, c, save))
+                .save(save)
+                .build()
+                .generateScreen(parent);
+    }
+
+    // ---------------------------------------------------------------- 总目录
+
+    private static ConfigCategory overview(TranslateConfig tr, ReadAloudConfig ra, Config c, Runnable save) {
+        return ConfigCategory.createBuilder()
+                .name(Component.literal("总目录"))
+                .group(OptionGroup.createBuilder()
+                        .name(Component.literal("翻译"))
+                        .option(bool("自动翻译", "收到消息自动翻译", tr.autoEnabled, () -> tr.autoEnabled, v -> tr.autoEnabled = v))
+                        .option(cycle("目标语言", "翻译成什么语言", tr.targetLanguage, TARGETS, () -> tr.targetLanguage, v -> tr.targetLanguage = v))
+                        .option(bool("出站翻译", "自己发的话翻成对方语言", tr.translateOutgoing, () -> tr.translateOutgoing, v -> tr.translateOutgoing = v))
+                        .collapsed(false)
+                        .build())
+                .group(OptionGroup.createBuilder()
+                        .name(Component.literal("朗读"))
+                        .option(bool("自动朗读", "收到翻译后朗读", ra.enabled, () -> ra.enabled, v -> ra.enabled = v))
+                        .option(bool("读原文", "朗读原消息", ra.readOriginal, () -> ra.readOriginal, v -> ra.readOriginal = v))
+                        .option(bool("读译文", "朗读译文", ra.readTranslation, () -> ra.readTranslation, v -> ra.readTranslation = v))
+                        .collapsed(false)
+                        .build())
+                .group(OptionGroup.createBuilder()
+                        .name(Component.literal("右键菜单"))
+                        .option(bool("启用右键菜单", "左键点消息弹出菜单", c.contextMenu, () -> c.contextMenu, v -> c.contextMenu = v))
+                        .option(bool("删除前警告", "删除消息前弹出确认", c.contextDeletionWarning, () -> c.contextDeletionWarning, v -> c.contextDeletionWarning = v))
+                        .collapsed(false)
+                        .build())
+                .group(OptionGroup.createBuilder()
+                        .name(Component.literal("开发者"))
+                        .option(bool("搜索", "启用聊天搜索", c.search, () -> c.search, v -> c.search = v))
+                        .option(bool("记录聊天", "把聊天写入日志文件", c.chatlog, () -> c.chatlog, v -> c.chatlog = v))
+                        .collapsed(false)
+                        .build())
+                .build();
+    }
+
+    // ---------------------------------------------------------------- 翻译
+
+    private static ConfigCategory translate(TranslateConfig tr, Runnable save) {
+        return ConfigCategory.createBuilder()
+                .name(Component.literal("翻译"))
+                .group(OptionGroup.createBuilder()
+                        .name(Component.literal("基础"))
+                        .option(bool("启用翻译", "总开关", tr.enabled, () -> tr.enabled, v -> tr.enabled = v))
+                        .option(bool("自动翻译", "收到消息自动翻译", tr.autoEnabled, () -> tr.autoEnabled, v -> tr.autoEnabled = v))
+                        .option(cycle("入站源语言", "别人说的话本来是什么语言", tr.sourceLanguage, SRC_AUTO, () -> tr.sourceLanguage, v -> tr.sourceLanguage = v))
+                        .option(cycle("入站目标语言", "翻译成什么语言", tr.targetLanguage, TARGETS, () -> tr.targetLanguage, v -> tr.targetLanguage = v))
+                        .option(bool("出站翻译", "自己发的话翻成对方语言", tr.translateOutgoing, () -> tr.translateOutgoing, v -> tr.translateOutgoing = v))
+                        .option(cycle("出站源语言", "我打的话是什么语言", tr.outgoingSourceLanguage, LANGS, () -> tr.outgoingSourceLanguage, v -> tr.outgoingSourceLanguage = v))
+                        .option(cycle("出站目标语言", "翻成对方语言；自动=跟随入站源语言", tr.outgoingTargetLanguage, TARGETS_AUTO, () -> tr.outgoingTargetLanguage, v -> tr.outgoingTargetLanguage = v))
+                        .option(bool("点击翻译", "左键点消息手动翻译", tr.translateOnClick, () -> tr.translateOnClick, v -> tr.translateOnClick = v))
+                        .option(providerOption("翻译源", "用哪个服务商", tr.activeProvider, providerNames(tr), providerUrls(tr), () -> tr.activeProvider, v -> tr.activeProvider = v))
+                        .option(integer("超时 (ms)", "单次请求超时", tr.timeoutMs, 1000, 15000, 500, () -> tr.timeoutMs, v -> tr.timeoutMs = v))
+                        .collapsed(false)
+                        .build())
+                .group(OptionGroup.createBuilder()
+                        .name(Component.literal("限流"))
+                        .option(integer("最小请求间隔 (ms)", "两次请求之间至少隔多久", tr.minIntervalMs, 0, 3000, 100, () -> tr.minIntervalMs, v -> tr.minIntervalMs = v))
+                        .option(integer("429 退避起点 (ms)", "被限流后的第一次等待", tr.rateLimitBackoffMs, 1000, 60000, 1000, () -> tr.rateLimitBackoffMs, v -> tr.rateLimitBackoffMs = v))
+                        .option(integer("429 退避上限 (ms)", "退避最长等待", tr.rateLimitBackoffMaxMs, 30000, 300000, 5000, () -> tr.rateLimitBackoffMaxMs, v -> tr.rateLimitBackoffMaxMs = v))
+                        .option(bool("调试日志", "把翻译过程写进日志", tr.debug, () -> tr.debug, v -> tr.debug = v))
+                        .collapsed(true)
+                        .build())
+                .group(OptionGroup.createBuilder()
+                        .name(Component.literal("操作"))
+                        .option(ButtonOption.createBuilder()
+                                .name(Component.literal("恢复默认（翻译）"))
+                                .text(Component.literal("把本分类选项重置为出厂值"))
+                                .action(screen -> { resetTranslate(tr); ConfigStore.saveTranslate(); })
+                                .build())
+                        .build())
+                .build();
+    }
+
+    // ---------------------------------------------------------------- 朗读
+
+    private static ConfigCategory readAloud(ReadAloudConfig ra, Runnable save) {
+        return ConfigCategory.createBuilder()
+                .name(Component.literal("朗读"))
+                .group(OptionGroup.createBuilder()
+                        .name(Component.literal("基础"))
+                        .option(bool("启用朗读", "TTS 总开关", ra.enabled, () -> ra.enabled, v -> ra.enabled = v))
+                        .option(bool("读原文", "朗读原消息", ra.readOriginal, () -> ra.readOriginal, v -> ra.readOriginal = v))
+                        .option(bool("读译文", "朗读译文", ra.readTranslation, () -> ra.readTranslation, v -> ra.readTranslation = v))
+                        .option(bool("只读英文", "只朗读英文消息", ra.onlyEnglish, () -> ra.onlyEnglish, v -> ra.onlyEnglish = v))
+                        .option(bool("读自己的消息", "自己发的也朗读", ra.speakOwnMessages, () -> ra.speakOwnMessages, v -> ra.speakOwnMessages = v))
+                        .option(integer("最短长度", "太短的消息不读", ra.minLength, 1, 50, 1, () -> ra.minLength, v -> ra.minLength = v))
+                        .option(integer("最长长度", "太长的消息截断", ra.maxLength, 50, 1000, 10, () -> ra.maxLength, v -> ra.maxLength = v))
+                        .option(flt("音量", "朗读音量", ra.volume, 0f, 1f, 0.05f, () -> ra.volume, v -> ra.volume = v))
+                        .option(providerOption("朗读引擎", "用哪个 TTS 服务", ra.activeProvider, providerNames2(ra), providerUrls2(ra), () -> ra.activeProvider, v -> ra.activeProvider = v))
+                        .option(integer("超时 (ms)", "单次合成超时", ra.timeoutMs, 5000, 60000, 1000, () -> ra.timeoutMs, v -> ra.timeoutMs = v))
+                        .option(integer("缓存条数", "0 = 不缓存", ra.cacheSize, 0, 256, 8, () -> ra.cacheSize, v -> ra.cacheSize = v))
+                        .collapsed(false)
+                        .build())
+                .group(OptionGroup.createBuilder()
+                        .name(Component.literal("操作"))
+                        .option(ButtonOption.createBuilder()
+                                .name(Component.literal("恢复默认（朗读）"))
+                                .text(Component.literal("把本分类选项重置为出厂值"))
+                                .action(screen -> { resetReadAloud(ra); ConfigStore.saveReadAloud(); })
+                                .build())
+                        .build())
+                .build();
+    }
+
+    // ---------------------------------------------------------------- 右键菜单
+
+    private static ConfigCategory contextMenu(Config c, Runnable save) {
+        return ConfigCategory.createBuilder()
+                .name(Component.literal("右键菜单"))
+                .group(OptionGroup.createBuilder()
+                        .name(Component.literal("基础"))
+                        .option(bool("启用右键菜单", "左键点消息弹出菜单", c.contextMenu, () -> c.contextMenu, v -> c.contextMenu = v))
+                        .option(bool("删除前警告", "删除消息前弹出确认", c.contextDeletionWarning, () -> c.contextDeletionWarning, v -> c.contextDeletionWarning = v))
+                        .option(bool("删除音效", "删除时的呲啦声", c.contextDeletionSizzle, () -> c.contextDeletionSizzle, v -> c.contextDeletionSizzle = v))
+                        .option(str("回复格式", "回复按钮生成的命令，$ 为占位", c.contextReplyFormat, () -> c.contextReplyFormat, v -> c.contextReplyFormat = v))
+                        .collapsed(false)
+                        .build())
+                .build();
+    }
+
+    // ---------------------------------------------------------------- 开发者
+
+    private static ConfigCategory developer(TranslateConfig tr, RecordConfig rec, Config c, Runnable save) {
+        return ConfigCategory.createBuilder()
+                .name(Component.literal("开发者"))
+                .group(OptionGroup.createBuilder()
+                        .name(Component.literal("记录与恢复"))
+                        .option(integer("恢复上限", "最多恢复多少条", rec.restoreLimit, 100, 10000, 100, () -> rec.restoreLimit, v -> rec.restoreLimit = v))
+                        .option(integer("恢复天数", "往前恢复几天", rec.restoreDays, 1, 30, 1, () -> rec.restoreDays, v -> rec.restoreDays = v))
+                        .option(bool("每次启动只恢复一次", "避免重复灌回", rec.restoreOncePerLaunch, () -> rec.restoreOncePerLaunch, v -> rec.restoreOncePerLaunch = v))
+                        .option(bool("历史分界", "显示/隐藏分界行", rec.historyBoundary.enabled, () -> rec.historyBoundary.enabled, v -> rec.historyBoundary.enabled = v))
+                        .option(str("开始分界文本", "{date} 会被替换成日期", rec.historyBoundary.startFormat, () -> rec.historyBoundary.startFormat, v -> rec.historyBoundary.startFormat = v))
+                        .option(str("结束分界文本", "历史记录结束行", rec.historyBoundary.endText, () -> rec.historyBoundary.endText, v -> rec.historyBoundary.endText = v))
+                        .option(str("分界颜色", "§ 颜色代码", rec.historyBoundary.color, () -> rec.historyBoundary.color, v -> rec.historyBoundary.color = v))
+                        .collapsed(false)
+                        .build())
+                .group(OptionGroup.createBuilder()
+                        .name(Component.literal("显示"))
+                        .option(bool("时间戳", "消息前显示时间", c.time, () -> c.time, v -> c.time = v))
+                        .option(str("时间格式", "HH:mm:ss", c.timeDate, () -> c.timeDate, v -> c.timeDate = v))
+                        .option(str("时间外框", "$ 为时间占位", c.timeFormat, () -> c.timeFormat, v -> c.timeFormat = v))
+                        .option(bool("消息计数", "显示第几条消息", c.counter, () -> c.counter, v -> c.counter = v))
+                        .option(bool("紧凑聊天", "合并重复消息", c.compactChat, () -> c.compactChat, v -> c.compactChat = v))
+                        .option(bool("显示名字", "消息前显示玩家名", c.name, () -> c.name, v -> c.name = v))
+                        .option(str("名字格式", "$ 为名字占位", c.nameFormat, () -> c.nameFormat, v -> c.nameFormat = v))
+                        .option(integer("聊天宽度", "0 = 默认", c.chatWidth, 0, 320, 10, () -> c.chatWidth, v -> c.chatWidth = v))
+                        .option(integer("聊天高度", "0 = 默认", c.chatHeight, 0, 180, 10, () -> c.chatHeight, v -> c.chatHeight = v))
+                        .option(integer("最大消息数", "0 = 默认", c.chatMaxMessages, 0, 1000, 50, () -> c.chatMaxMessages, v -> c.chatMaxMessages = v))
+                        .collapsed(true)
+                        .build())
+                .group(OptionGroup.createBuilder()
+                        .name(Component.literal("搜索"))
+                        .option(bool("启用搜索", "聊天搜索框", c.search, () -> c.search, v -> c.search = v))
+                        .option(bool("区分大小写", "搜索匹配区分大小写", c.caseSensitive, () -> c.caseSensitive, v -> c.caseSensitive = v))
+                        .option(bool("正则搜索", "把输入当作正则", c.regex, () -> c.regex, v -> c.regex = v))
+                        .option(bool("空搜索显示全部", "空关键字时显示全部消息", c.searchEmptyShowsFullChat, () -> c.searchEmptyShowsFullChat, v -> c.searchEmptyShowsFullChat = v))
+                        .collapsed(true)
+                        .build())
+                .build();
+    }
+
+    // ---------------------------------------------------------------- 工具
+
+    private static <T> Option<T> option(String name, String desc, T def, Supplier<T> get, Consumer<T> set,
+                                        Function<Option<T>, ControllerBuilder<T>> controller) {
+        return Option.<T>createBuilder()
+                .name(Component.literal(name))
+                .description(OptionDescription.of(Component.literal(desc)))
+                .binding(def, get, set)
+                .controller(controller)
+                .build();
+    }
+
+    private static Option<Boolean> bool(String name, String desc, boolean def, Supplier<Boolean> get, Consumer<Boolean> set) {
+        return option(name, desc, def, get, set, opt -> BooleanControllerBuilder.create(opt).coloured(true));
+    }
+
+    private static Option<String> cycle(String name, String desc, String def, List<String> values, Supplier<String> get, Consumer<String> set) {
+        return option(name, desc, def, get, set, opt -> CyclingListControllerBuilder.create(opt).values(values));
+    }
+
+    private static Option<Integer> integer(String name, String desc, int def, int min, int max, int step, Supplier<Integer> get, Consumer<Integer> set) {
+        return option(name, desc, def, get, set, opt -> IntegerSliderControllerBuilder.create(opt).range(min, max).step(step));
+    }
+
+    private static Option<Float> flt(String name, String desc, float def, float min, float max, float step, Supplier<Float> get, Consumer<Float> set) {
+        return option(name, desc, def, get, set, opt -> FloatSliderControllerBuilder.create(opt).range(min, max).step(step));
+    }
+
+    private static Option<String> providerOption(String name, String desc, String def, List<String> names, java.util.Map<String, String> urls, Supplier<String> get, Consumer<String> set) {
+        return Option.<String>createBuilder()
+                .name(Component.literal(name))
+                .description(OptionDescription.of(Component.literal(desc)))
+                .binding(def, get, set)
+                .controller(opt -> CyclingListControllerBuilder.create(opt)
+                        .values(names)
+                        .formatValue(v -> Component.literal(v == null || v.isEmpty() ? "自动" : (urls.getOrDefault(v, "").isEmpty() ? v : v + "（" + urls.get(v) + "）"))))
+                .build();
+    }
+
+    private static Option<String> str(String name, String desc, String def, Supplier<String> get, Consumer<String> set) {
+        return option(name, desc, def, get, set, opt -> StringControllerBuilder.create(opt));
+    }
+
+    private static void resetTranslate(TranslateConfig tr) {
+        tr.enabled = true; tr.autoEnabled = true;
+        tr.sourceLanguage = "英语"; tr.targetLanguage = "简体中文";
+        tr.outgoingSourceLanguage = "中文"; tr.outgoingTargetLanguage = "English";
+        tr.translateOutgoing = true; tr.translateOnClick = false;
+        tr.activeProvider = ""; tr.timeoutMs = 4000;
+        tr.minIntervalMs = 800; tr.rateLimitBackoffMs = 20000; tr.rateLimitBackoffMaxMs = 120000;
+        tr.debug = false;
+    }
+
+    private static void resetReadAloud(ReadAloudConfig ra) {
+        ra.enabled = false; ra.readOriginal = true; ra.readTranslation = false;
+        ra.onlyEnglish = true; ra.speakOwnMessages = true;
+        ra.minLength = 2; ra.maxLength = 300; ra.volume = 1.0f;
+        ra.timeoutMs = 20000; ra.cacheSize = 64; ra.activeProvider = "";
+    }
+
+    /** provider 名字列表（空值表示“自动”）。 */
+    private static java.util.Map<String, String> providerUrls(TranslateConfig tr) {
+        java.util.Map<String, String> m = new java.util.HashMap<>();
+        for (ApiProvider p : tr.providers) {
+            if (p != null && p.name != null) m.put(p.name, p.baseUrl == null ? "" : p.baseUrl);
+        }
+        return m;
+    }
+
+    private static List<String> providerNames(TranslateConfig tr) {
+        List<String> out = new ArrayList<>();
+        out.add("");
+        for (ApiProvider p : tr.providers) {
+            if (p != null && p.name != null) {
+                out.add(p.name);
+            }
+        }
+        return out;
+    }
+
+    private static java.util.Map<String, String> providerUrls2(ReadAloudConfig ra) {
+        java.util.Map<String, String> m = new java.util.HashMap<>();
+        for (ApiProvider p : ra.providers) {
+            if (p != null && p.name != null) m.put(p.name, p.baseUrl == null ? "" : p.baseUrl);
+        }
+        return m;
+    }
+
+    private static List<String> providerNames2(ReadAloudConfig ra) {
+        List<String> out = new ArrayList<>();
+        out.add("");
+        for (ApiProvider p : ra.providers) {
+            if (p != null && p.name != null) out.add(p.name);
+        }
+        return out;
+    }
+
+    private static List<String> providerNames(ReadAloudConfig ra) {
+        List<String> out = new ArrayList<>();
+        out.add("");
+        for (ApiProvider p : ra.providers) {
+            if (p != null && p.name != null) {
+                out.add(p.name);
+            }
+        }
+        return out;
+    }
+}

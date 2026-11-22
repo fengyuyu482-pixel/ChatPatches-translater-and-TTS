@@ -104,5 +104,22 @@
   "text.chatpatches.context.timestampText": "Texte",
   "text.chatpatches.context.timestampHoverText": "Texte survolant",
   "text.chatpatches.context.unix": "Copier l'heure Unix",
-  "text.chatpatches.context.reply": "Répondre"
+  "text.chatpatches.context.reply": "Répondre",
+  "chatstudy.service.kokoro": "Kokoro",
+  "chatstudy.service.hunyuan": "Hunyuan Hy-MT2",
+  "chatstudy.notice.notRunning": "Service not running",
+  "chatstudy.service.local": "Local translation (Ollama)",
+  "chatstudy.service.piper": "Piper",
+  "chatstudy.notice.unconfigured": "Not configured",
+  "chatstudy.notice.unknownReason": "Unknown reason",
+  "chatstudy.notice.cannotReach": "[ChatPatch] Cannot connect to %s: %s",
+  "chatstudy.notice.connected": "[ChatPatch] Connected: %s",
+  "chatstudy.service.sovits": "GPT-SoVITS",
+  "chatstudy.service.onlineTts": "Online speech (OpenAI-compatible)",
+  "chatstudy.service.online": "Online translation (DeepSeek)",
+  "chatstudy.notice.langLineOk": "[ChatPatch] %s: %s → %s",
+  "chatstudy.notice.langLineAuto": "[ChatPatch] %s: Auto Detect",
+  "chatstudy.notice.langLineNoAuto": "[ChatPatch] %s: Auto Detect is not allowed",
+  "chatstudy.notice.langLineBad": "[ChatPatch] %s: not recognised %s",
+  "chatstudy.notice.langLineEmpty": "[ChatPatch] %s: not set"
 }

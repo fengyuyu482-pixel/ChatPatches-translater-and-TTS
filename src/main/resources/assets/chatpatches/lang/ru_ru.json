@@ -157,5 +157,22 @@
   "text.chatpatches.context.delete" : "Удалить",
   "text.chatpatches.context.delete.confirm" : "Вы уверены, что хотите удалить это сообщение? Это НЕВОЗМОЖНО отменить.",
   "text.chatpatches.context.unknown" : "/§e!§r\\ Неизвестные данные для '§6%s§r', пожалуйста, сообщите об этой ошибке!",
-  "text.chatpatches.restored" : "Восстановленное сообщение"
+  "text.chatpatches.restored" : "Восстановленное сообщение",
+  "chatstudy.notice.connected": "[ChatPatch] Connected: %s",
+  "chatstudy.notice.cannotReach": "[ChatPatch] Cannot connect to %s: %s",
+  "chatstudy.notice.unconfigured": "Not configured",
+  "chatstudy.notice.notRunning": "Service not running",
+  "chatstudy.notice.unknownReason": "Unknown reason",
+  "chatstudy.service.online": "Online translation (DeepSeek)",
+  "chatstudy.service.local": "Local translation (Ollama)",
+  "chatstudy.service.hunyuan": "Hunyuan Hy-MT2",
+  "chatstudy.service.onlineTts": "Online speech (OpenAI-compatible)",
+  "chatstudy.service.sovits": "GPT-SoVITS",
+  "chatstudy.service.kokoro": "Kokoro",
+  "chatstudy.service.piper": "Piper",
+  "chatstudy.notice.langLineOk": "[ChatPatch] %s: %s → %s",
+  "chatstudy.notice.langLineAuto": "[ChatPatch] %s: Auto Detect",
+  "chatstudy.notice.langLineNoAuto": "[ChatPatch] %s: Auto Detect is not allowed",
+  "chatstudy.notice.langLineBad": "[ChatPatch] %s: not recognised %s",
+  "chatstudy.notice.langLineEmpty": "[ChatPatch] %s: not set"
 }

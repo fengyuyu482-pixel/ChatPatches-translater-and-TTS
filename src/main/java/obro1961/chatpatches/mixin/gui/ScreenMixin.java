@@ -1,9 +1,9 @@
 package obro1961.chatpatches.mixin.gui;
 
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
-import com.mojang.blaze3d.platform.InputConstants;
+import org.lwjgl.glfw.GLFW;
 import net.minecraft.client.gui.ComponentPath;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.Screen;
 import obro1961.chatpatches.accessor.ChatScreenAccess;
@@ -19,10 +19,10 @@ import net.minecraft.client.input.KeyEvent;
 @Mixin(Screen.class)
 public abstract class ScreenMixin {
     @Unique
-	private static final String FIX_CLICKTHROUGH_TARGET_METHOD = "extractRenderState" + "WithTooltipAndSubtitles";
+	private static final String FIX_CLICKTHROUGH_TARGET_METHOD = "render" + "WithTooltipAndSubtitles";
     @Unique
     //~ render_extraction
-	private static final String FIX_CLICKTHROUGH_TARGET_REFERENCE = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;extractDeferredElements("/*? if >=26.1 {*/+ "IIF"/*?}*/ + ")V";
+	private static final String FIX_CLICKTHROUGH_TARGET_REFERENCE = "Lnet/minecraft/client/gui/GuiGraphics;renderDeferredElements("/*? if >=26.1 {*//*+ "IIF"*//*?}*/ + ")V";
     /*~ !render_extraction*/
 
 
@@ -33,12 +33,12 @@ public abstract class ScreenMixin {
     @WrapWithCondition(method = "keyPressed", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;changeFocus(Lnet/minecraft/client/gui/ComponentPath;)V"))
     private boolean cancelChatSwitchFocus(Screen screen, ComponentPath path, KeyEvent key) {
         /*? if >=1.21.9 {*/ int keyCode = key.key(); /*?}*/
-        return !(screen instanceof ChatScreen && (keyCode == InputConstants.KEY_UP || keyCode == InputConstants.KEY_DOWN));
+        return !(screen instanceof ChatScreen && (keyCode == GLFW.GLFW_KEY_UP || keyCode == GLFW.GLFW_KEY_DOWN));
     }
 
     /*? if >=1.21.11 {*/
     @WrapWithCondition(method = FIX_CLICKTHROUGH_TARGET_METHOD, at = @At(value = "INVOKE", target = FIX_CLICKTHROUGH_TARGET_REFERENCE))
-    private boolean fixFuckassTooltipAndClickthrough(/*? if 1.21.11 {*//*GuiGraphicsExtractor receiver,*//*?}*/ GuiGraphicsExtractor graphics, int mX, int mY, float partialTick) {
+    private boolean fixFuckassTooltipAndClickthrough(/*? if 1.21.11 {*/GuiGraphics receiver,/*?}*/ GuiGraphics graphics, int mX, int mY, float partialTick) {
         if(((Screen) (Object) this) instanceof ChatScreen chatScreen) {
             ChatScreenAccess access = (ChatScreenAccess) chatScreen;
             ContextMenu menu = access.getContextMenu();

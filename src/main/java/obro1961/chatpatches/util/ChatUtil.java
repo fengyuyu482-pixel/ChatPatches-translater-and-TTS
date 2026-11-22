@@ -9,7 +9,7 @@ import it.unimi.dsi.fastutil.objects.ObjectObjectImmutablePair;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.ChatComponent;
 import net.minecraft.client.gui.screens.ChatScreen;
-import net.minecraft.client.multiplayer.chat.GuiMessage;
+import net.minecraft.client.GuiMessage;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.*;
 import net.minecraft.network.chat.contents.TranslatableContents;
@@ -35,15 +35,15 @@ import static net.minecraft.network.chat.CommonComponents.EMPTY;
 import static obro1961.chatpatches.ChatPatches.*;
 
 //? if >=26.1 {
-import net.minecraft.client.multiplayer.chat.GuiMessageSource;
-//?}
+/*import net.minecraft.client.GuiMessageSource;
+*///?}
 //? if >=1.21.9 {
 import obro1961.chatpatches.integration.ChatHeadsIntegration;
 //? }
 
 public class ChatUtil {
 	public static final GameProfile NIL_SENDER = new GameProfile(Util.NIL_UUID, "");
-	public static final GuiMessage NIL_HUD_LINE = new GuiMessage(0, EMPTY, null, /*? if >=26.1 {*/GuiMessageSource.SYSTEM_CLIENT,/*?}*/ null);
+	public static final GuiMessage NIL_HUD_LINE = new GuiMessage(0, EMPTY, null, /*? if >=26.1 {*//*GuiMessageSource.SYSTEM_CLIENT,*//*?}*/ null);
 	public static final MessageData NIL_MESSAGE_DATA = new MessageData(NIL_SENDER, Date.from(Instant.EPOCH), false);
 	public static final Pair<GuiMessage, List<GuiMessage.Line>> NIL_MESSAGE_PAIR = new ObjectObjectImmutablePair<>(NIL_HUD_LINE, List.of());
 
@@ -153,7 +153,7 @@ public class ChatUtil {
 	 * @see #visible2Message(int)
 	 */
 	public static int message2Visible(int messageIndex) {
-		var visibles = mc().gui.hud.getChat().trimmedMessages;
+		var visibles = mc().gui.getChat().trimmedMessages;
 
 		if(messageIndex == -1) {
 			return -1; // avoids iterating through the entire list
@@ -191,7 +191,7 @@ public class ChatUtil {
 	 * @see #message2Visible(int)
 	 */
 	public static int visible2Message(int visibleIndex) {
-		var visibles = mc().gui.hud.getChat().trimmedMessages;
+		var visibles = mc().gui.getChat().trimmedMessages;
 
 		if(visibleIndex == -1 || visibleIndex >= visibles.size()) {
 			return -1;
@@ -215,7 +215,7 @@ public class ChatUtil {
 	 */
 	@SuppressWarnings("UnusedReturnValue") // follows the List convention
 	public static Pair<GuiMessage, List<GuiMessage.Line>> deleteMessage(GuiMessage message, boolean playBurnSound) {
-		return deleteMessage(mc().gui.hud.getChat().allMessages.indexOf(message), playBurnSound);
+		return deleteMessage(mc().gui.getChat().allMessages.indexOf(message), playBurnSound);
 	}
 
 	/**
@@ -240,7 +240,7 @@ public class ChatUtil {
 	 * happen.
 	 */
 	public static Pair<GuiMessage, List<GuiMessage.Line>> deleteMessage(int messageIndex, boolean playBurnSound) {
-		ChatComponent chat = mc().gui.hud.getChat();
+		ChatComponent chat = mc().gui.getChat();
 		List<GuiMessage> messages = chat.allMessages;
 		List<GuiMessage.Line> visibles = chat.trimmedMessages;
 		// messages shown when searching don't have any issues (at least in terms of GuiMessage) because the index passed is based in #allMessages - perfect!
@@ -472,6 +472,36 @@ public class ChatUtil {
 		MutableComponent content = m.copy(); // default to the original message
 		// dupe counter is always empty at this stage
 
+		// ---- chatstudy: ★ 在源头把「结构」拿出来，不要事后从渲染串反推 ----
+		//
+		// ChatTypeDecoration.decorate() 会把消息做成
+		//     Component.translatable("chat.type.text", 发送者, 正文)
+		// 然后【按客户端语言】解析。而语言可以被资源包改写 —— 本服的 MIA 资源包就把它
+		// 改成了 "%s%s"，渲染出来是 "Xiaoliyu_23333"：名字和内容之间一个分隔符都没有。
+		// 从这种串里反推说话人是做不到的（这也是单机下"没有冒号"的真正原因）。
+		//
+		// 但参数表里那两个值一直都在。就在这里取走 —— 这是唯一还拿得到的时刻。
+		// 拿不到（非 chat.type.* 的消息，比如服务器自己渲染好的系统播报）就留 null，
+		// 让下游落到那唯一一处兜底。
+		final String studySpeaker = (!lastEmpty && messageData.sender() != null)
+			? VersionUtil.profileName(messageData.sender())
+			: null;
+		// ★ M2b：UUID 也一起带下去（落盘用）。名字会改、会重名，身份只有 UUID 稳。
+		//   取不到（系统消息/离线服）就留 null，不写假值。
+		final String studyUuid = (!lastEmpty && messageData.sender() != null)
+			? VersionUtil.profileUuid(messageData.sender())
+			: null;
+		String studyContentRaw = null;
+		try {
+			if(m.getContents() instanceof TranslatableContents sttc && PARSEABLE_MESSAGE_KEYS.reset(sttc.getKey()).matches()) {
+				studyContentRaw = getArg(sttc, sttc.getKey().contains("team") ? MSG_CONTENT_INDEX : MESSAGE_INDEX).getString();
+			}
+		} catch(Exception e) {
+			// 取不到就当没有 —— 绝不能因为"想拿正文"把聊天渲染搞炸
+			LOGGER.warn("[chatpatch] 从参数表取正文失败: {}", e.toString());
+		}
+		final String studyContent = studyContentRaw;
+
 		//noinspection UnusedAssignment: will throw an error on <1.21.9
 		Optional<MutableComponent> head = Optional.empty();
 
@@ -481,6 +511,13 @@ public class ChatUtil {
 			// reconstruct the player message if it's in the vanilla format & it should be reformatted
 			// the messageData vanilla means the original message was vanilla-formatted, and the regex check means it still is.
 			// see Xaero's Minimap waypoint sharing for more information (#158)
+			//
+			// chatstudy: ★ 这道门【故意】保持只认渲染串，不去绕开它。
+			//
+			// 曾经试过改成"看结构"（TranslatableContents 的 key），好让资源包把
+			// chat.type.text 改成 "%s%s" 时也能重排 —— 已撤掉。原因：
+			// 那等于 mod 和资源包抢着决定显示，而"包改了格式就跟着包走"才是对的行为。
+			// 需求原话：「可以接受被资源包覆盖格式」「被覆盖掉也无所谓」。
 			Matcher matcher = MESSAGE_FORMAT.reset(m.getString());
 			if(config.name && !lastEmpty && messageData.vanilla && matcher.matches()) {
 				content = Component.empty().setStyle(style);
@@ -580,6 +617,20 @@ public class ChatUtil {
 		// assembles constructed message and tries to add a dupe counter
 		Component modified = tryCondenseDupes(buildMessage(null, timestamp, content, null)); // style is null bc only the message content should take on the original style
 		ChatLog.addMessage(modified);
+		// chatstudy: 一条消息成型了，交给我们的流水线（落盘 / 立刻朗读 / 异步翻译后挂第二行）
+		// 传的是【结构】而不是渲染串：说话人和正文都在上面取好了，渲染成什么样与解析无关。
+		try {
+			obro1961.chatpatches.chatstudy.ChatStudyBridge.onMessage(
+				modified,
+				now,
+				boundary ? "boundary" : (lastEmpty ? "system" : "chat"),
+				studySpeaker,
+				studyContent,
+				studyUuid
+			);
+		} catch(Exception e) {
+			LOGGER.warn("[chatpatch] 处理消息失败", e);
+		}
 		messageData = NIL_MESSAGE_DATA; // fixes messages that get around ChatListenerMixin's data caching, usually thru ChatHud#addMessage (ex. open-to-lan message)
 		return modified;
 	}
@@ -637,7 +688,7 @@ public class ChatUtil {
 	 */
 	private static Component tryCondenseDupes(Component incoming) {
 		// todo: make this method save to the chat log too (so no redundant messages)!
-		ChatComponent chat = mc().gui.hud.getChat();
+		ChatComponent chat = mc().gui.getChat();
 		List<GuiMessage> messages = chat.allMessages;
 		List<GuiMessage.Line> visibles = chat.trimmedMessages;
 

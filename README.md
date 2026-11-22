@@ -1,204 +1,173 @@
-[![Fabric Mod](https://img.shields.io/badge/modloader-fabric-eeeeee)](https://fabricmc.net/use/)
-[![Latest Version](https://img.shields.io/modrinth/v/MOqt4Z5n?color=blueviolet&label=latest%20version)](https://modrinth.com/mod/MOqt4Z5n)
+# ChatStudy — Chat Patches 的翻译 / 朗读扩展
 
-[![Build Status](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Fmrbuilder1961%2FChatPatches%2Fbadge%3Fref%3Domnivers&style=flat)](https://actions-badge.atrox.dev/mrbuilder1961/ChatPatches/goto?ref=omnivers)
-![GitHub code size](https://img.shields.io/github/languages/code-size/mrbuilder1961/ChatPatches)
+> **本项目是 [Chat Patches](https://github.com/mrbuilder1961/ChatPatches) 的 fork**，
+> 在原模组基础上增加了**聊天翻译**与 **TTS 朗读**两大模块。
+> Fork 已获得原作者许可。
 
-[![Curseforge Download](https://cf.way2muchnoise.eu/full_560042_downloads.svg)](https://www.curseforge.com/minecraft/mc-mods/chatpatches)
-[![Modrinth Download](https://img.shields.io/badge/dynamic/json?&color=242629&labelColor=5ca424&label=&suffix=%20downloads&query=downloads&url=https://api.modrinth.com/v2/project/MOqt4Z5n&cacheSeconds=3600&logo=data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+Cjxzdmcgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDUxMiA1MTQiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSIgeG1sbnM6c2VyaWY9Imh0dHA6Ly93d3cuc2VyaWYuY29tLyIgc3R5bGU9ImZpbGwtcnVsZTpldmVub2RkO2NsaXAtcnVsZTpldmVub2RkO3N0cm9rZS1saW5lam9pbjpyb3VuZDtzdHJva2UtbWl0ZXJsaW1pdDoyOyI+CiAgICA8Zz4KICAgICAgICA8ZyBpZD0ibW9kcmludGgiPgogICAgICAgICAgICA8cGF0aCBkPSJNNTAzLjE2LDMyMy41NkM1MTQuNTUsMjgxLjQ3IDUxNS4zMiwyMzUuOTEgNTAzLjIsMTkwLjc2QzQ2Ni41Nyw1NC4yMyAzMjYuMDQsLTI2LjggMTg5LjMzLDkuNzhDODMuODEsMzguMDIgMTEuMzksMTI4LjA3IDAuNjksMjMwLjQ3TDQzLjk5LDIzMC40N0M1NC4yOSwxNDcuMzMgMTEzLjc0LDc0LjczIDE5OS43NSw1MS43MUMzMDYuMDUsMjMuMjYgNDE1LjEzLDgwLjY3IDQ1My4xNywxODEuMzhMNDExLjAzLDE5Mi42NUMzOTEuNjQsMTQ1LjggMzUyLjU3LDExMS40NSAzMDYuMyw5Ni44MkwyOTguNTYsMTQwLjY2QzMzNS4wOSwxNTQuMTMgMzY0LjcyLDE4NC41IDM3NS41NiwyMjQuOTFDMzkxLjM2LDI4My44IDM2MS45NCwzNDQuMTQgMzA4LjU2LDM2OS4xN0wzMjAuMDksNDEyLjE2QzM5MC4yNSwzODMuMjEgNDMyLjQsMzEwLjMgNDIyLjQzLDIzNS4xNEw0NjQuNDEsMjIzLjkxQzQ2OC45MSwyNTIuNjIgNDY3LjM1LDI4MS4xNiA0NjAuNTUsMzA4LjA3TDUwMy4xNiwzMjMuNTZaIiBzdHlsZT0iZmlsbDpyZ2IoMjMsMjMsMjUpOyIvPgogICAgICAgICAgICA8cGF0aCBkPSJNMzIxLjk5LDUwNC4yMkMxODUuMjcsNTQwLjggNDQuNzUsNDU5Ljc3IDguMTEsMzIzLjI0QzMuODQsMzA3LjMxIDEuMTcsMjkxLjMzIDAsMjc1LjQ2TDQzLjI3LDI3NS40NkM0NC4zNiwyODcuMzcgNDYuNDcsMjk5LjM1IDQ5LjY4LDMxMS4yOUM1My4wNCwzMjMuOCA1Ny40NSwzMzUuNzUgNjIuNzksMzQ3LjA3TDEwMS4zOCwzMjMuOTJDOTguMTMsMzE2LjQyIDk1LjM5LDMwOC42IDkzLjIxLDMwMC40N0M2OS4xNywyMTAuODcgMTIyLjQxLDExOC43NyAyMTIuMTMsOTQuNzZDMjI5LjEzLDkwLjIxIDI0Ni4yMyw4OC40NCAyNjIuOTMsODkuMTVMMjU1LjE5LDEzM0MyNDQuNzMsMTMzLjA1IDIzNC4xMSwxMzQuNDIgMjIzLjUzLDEzNy4yNUMxNTcuMzEsMTU0Ljk4IDExOC4wMSwyMjIuOTUgMTM1Ljc1LDI4OS4wOUMxMzYuODUsMjkzLjE2IDEzOC4xMywyOTcuMTMgMTM5LjU5LDMwMC45OUwxODguOTQsMjcxLjM4TDE3NC4wNywyMzEuOTVMMjIwLjY3LDE4NC4wOEwyNzkuNTcsMTcxLjM5TDI5Ni42MiwxOTIuMzhMMjY5LjQ3LDIxOS44OEwyNDUuNzksMjI3LjMzTDIyOC44NywyNDQuNzJMMjM3LjE2LDI2Ny43OUMyMzcuMTYsMjY3Ljc5IDI1My45NSwyODUuNjMgMjUzLjk4LDI4NS42NEwyNzcuNywyNzkuMzNMMjk0LjU4LDI2MC43OUwzMzEuNDQsMjQ5LjEyTDM0Mi40MiwyNzMuODJMMzA0LjM5LDMyMC40NUwyNDAuNjYsMzQwLjYzTDIxMi4wOCwzMDguODFMMTYyLjI2LDMzOC43QzE4Ny44LDM2Ny43OCAyMjYuMiwzODMuOTMgMjY2LjAxLDM4MC41NkwyNzcuNTQsNDIzLjU1QzIxOC4xMyw0MzEuNDEgMTYwLjEsNDA2LjgyIDEyNC4wNSwzNjEuNjRMODUuNjQsMzg0LjY4QzEzNi4yNSw0NTEuMTcgMjIzLjg0LDQ4NC4xMSAzMDkuNjEsNDYxLjE2QzM3MS4zNSw0NDQuNjQgNDE5LjQsNDAyLjU2IDQ0NS40MiwzNDkuMzhMNDg4LjA2LDM2NC44OEM0NTcuMTcsNDMxLjE2IDM5OC4yMiw0ODMuODIgMzIxLjk5LDUwNC4yMloiIHN0eWxlPSJmaWxsOnJnYigyMywyMywyNSk7ZmlsbC1ydWxlOm5vbnplcm87Ii8+CiAgICAgICAgPC9nPgogICAgPC9nPgo8L3N2Zz4K)](https://www.modrinth.com/mod/MOqt4Z5n)
-[![Join the Discord Server!](https://img.shields.io/discord/1077285607375638529?color=6262df&label=discord%20)](https://discord.gg/3MqBvNEyMz)
-# Chat Patches
-### Requires [Yet Another Config Lib](https://modrinth.com/mod/yacl/versions?l=fabric&c=release) and a menu mod (see below) for 1.19.2+
+[![Minecraft](https://img.shields.io/badge/Minecraft-1.21.11-62b47a)](https://www.minecraft.net/)
+[![Fabric](https://img.shields.io/badge/Modloader-Fabric-eeeeee)](https://fabricmc.net/)
+[![License](https://img.shields.io/badge/License-LGPL--3.0-blue)](LICENSE)
 
-A Minecraft client-side mod that touches up Minecraft's mundane chat, with configurability in mind!
+---
 
-It's most significant features include (but are not limited to):
-- Increasing the maximum amount of chat messages from 100 to 16,384
-- Adding a timestamp in front of all messages, formatted as `[HOUR:MINUTE:SECOND]` in pink text, with a tooltip that renders a complete date
-- Keeping chat history and previously sent messages across ALL worlds and servers
-- Allowing logging chat messages for restoring them later in future Minecraft sessions
-- Letting you modify vanilla player names to anything you want (ex. without the triangle brackets!)
-- Minimizing spam with a counter that shows how many duplicate messages have been sent in a row
-- Shifting the chat hud up by 10 pixels, so it doesn't overlap with the armor bar
-- Providing a menu to copy specific data (and the text of course!) from chat messages
-- Letting you search through all received messages with a search bar
-- YOU being able to toggle any of these features and MORE!
+## 这是什么
 
-Many of these features were adopted or inspired from the following existing mods:
-- [More Chat History](https://www.curseforge.com/minecraft/mc-mods/more-chat-history)
-- [When Was That Again](https://www.curseforge.com/minecraft/mc-mods/wwta)
-- [Don't Clear Chat History](https://www.curseforge.com/minecraft/mc-mods/dont-clear-chat-history)
-- [No Angled Brackets](https://www.curseforge.com/minecraft/mc-mods/no-angled-brackets)
-- [Clear Spam](https://www.curseforge.com/minecraft/mc-mods/clearspam)
-- [Chat Up!](https://www.curseforge.com/minecraft/mc-mods/chat-up)
-- [Compact Chat](https://modrinth.com/mod/compact-chat)
+在 Chat Patches（强大的客户端聊天增强）之上，加了两个原版没有的能力：
 
-## FAQ
-- What Minecraft version can I use this with?
-  - Currently, all recent Fabric versions have releases; however, only widely-used versions are going to be maintained going forward.
-- Will you make it for (older Minecraft version)?
-  - No. If Minecraft's codebase allows for it, I'll consider making a release that would support a wide range of versions, but if it's too difficult then I 
-    won't bother as almost nobody plays those versions anymore.
-- Will you make this for Forge or NeoForge?
-  - Yes to NeoForge, but I need to cross some more important things off the agenda first. Maybe to Forge, but it's unlikely given 1.20.1 is already 3 years old.
-- I found a bug/issue, what do I do?
-  - First, make sure you're on the latest version of Chat Patches for your Minecraft version. If it doesn't go away, you can click on the Issues tab on this 
-    page, and if it hasn't been reported yet, you can create a new report! **FILL OUT THE ENTIRE REPORT.**
-- It says I need to install Fabric, but I already have it installed?
-  - [Install the Fabric API.](https://modrinth.com/mod/fabric-api)
-- Do servers need this mod?
-  - Nope! It's entirely client-side (it won't do anything if installed on the server).
-- I can't access the config menu in-game!
-  - <u>For 1.19.2+:</u>
-    - Installing either [Mod Menu](https://modrinth.com/mod/modmenu/versions) or [Catalogue](https://www.curseforge.com/minecraft/mc-mods/catalogue-fabric) with [Menulogue](https://www.curseforge.com/minecraft/mc-mods/menulogue) will allow you to edit the config in-game!
-    - Otherwise, if you still cannot access the config, [open an issue on GitHub](https://github.com/mrbuilder1961/ChatPatches/issues/new/choose), and 
-      provide any logged errors if they exist.
-  - <u>For 1.18.x:</u> You need the latest versions of both [Cloth Config](https://modrinth.com/mod/cloth-config/versions?l=fabric&c=release) and [Mod Menu](https://modrinth.com/mod/modmenu/versions?l=fabric&c=release).
-  - Regardless of Minecraft version, you can **always** edit the config at `(directory)/config/chatpatches.json`.
-- How do I enable/disable/change X feature?
-  1. Open the config menu. How you do this depends on the menu mod(s) you have installed, but it typically involves **<kbd>Esc</kbd> -> Mods -> Chat Patches -> 3 sliders/Config button** !
-  2. Look through each category and see if the option is there - make sure to read the descriptions.
-  3. If you still can't find it, scroll down on this page and see if it's listed in the option table. Note this refers to the latest version.
-  4. If it's not in any of those, then check on the [suggestion page](https://github.com/mrbuilder1961/ChatPatches/issues?q=is%3Aissue%20state%3Aopen%20label%3Asuggestion); chances are someone already suggested your idea.
-  5. Finally, it's not in the mod yet, so open a suggestion!
-- My config is broken/not working!
-  - When you load one of the more recent mod versions, it makes a creates a new file with your old settings and resets the main file. You can access this
-    copy at `(directory)/config/chatpatches_old.json`. By then opening both the new and old configs at the same time, you can copy and paste over the values.
-    Make sure the settings have correct inputs (ex. `time` should be `true`/`false` not `123` or `"true"`).
-  - If you still are having problems, open a new issue on GitHub.
-- Can I use this in a modpack?
-  - Yes, as long as you credit me and/or link back to one of the official pages ([GitHub](https://github.com/mrbuilder1961/ChatPatches), [Modrinth](https://modrinth.com/mod/chatpatches/versions), and [CurseForge](https://www.curseforge.com/minecraft/mc-mods/chatpatches)).
-- Can I re-upload this mod elsewhere?
-  - No, unless you have explicit permission from me (OBro1961), modify the mod in an undisputable way, or any download links used direct to one of the official 
-    pages (see above). If you're unsure, message me on Discord (@obro1961) about it.
-- How do I do XYZ?
-  - If the answer you're looking for isn't anywhere here or in the config, check the **#Help** section located below.
-  - If you still can't find it, ask in the [Discord](https://discord.gg/3MqBvNEyMz)!
+| 功能 | 说明 |
+|---|---|
+| **聊天翻译** | 别人说的话自动翻成你的语言；你打的话自动翻成对方语言 |
+| **TTS 朗读** | 把聊天内容念出来，支持系统语音 / GPT-SoVITS / Piper / Kokoro / OpenAI 兼容服务 |
 
-## Setup devenv / Build latest jars
-1. Download the latest ZIP (this page -> Code -> Download ZIP)
-2. Extract it to your desired folder
-3. Open a terminal/command prompt, then run `./gradlew build` (to build and collect jars for every Minecraft version, run `./gradlew collectAll`)
-4. [For a devenv]: open the folder in your IDE
-5. [For built jars]: navigate to `/versions/<version>/build/libs/` (or `/build/libs/` if you ran `collectAll`)
+### 翻译模块
 
-## Localization and Translation
-If you would like to help translate Chat Patches into other languages, you can:
-- [Create a pull request](https://github.com/mrbuilder1961/ChatPatches/compare) that adds, corrects, or updates a language file *(preferred)*
-  - If you do this, please feel free to add yourself to the credits list in `gradle.properties`! Just make sure to follow the pattern.
-- DM me on Discord (@obro1961)
+- **85 种语言**（Minecraft 官方语言表与语言代码体系的交集），按使用人口三级分层
+- **降级链**：首选源失败自动降级到下一个，每句独立重试
+- **能力矩阵**：每个服务商支持哪些语言写在数据表里，不支持的直接跳过
+- **占位符保护**：`@玩家名` / 坐标 / 命令 / 链接 / 数字 / 代码块不被翻译
+- **六项质量校验**：数字一致性、目标文字系统、自我解释、退化重复等
+- **定向判定**：按文字系统严格判断「这条要不要翻」，不做全语言猜测
 
-Once you contribute, [join the Discord server](https://discord.gg/3MqBvNEyMz) so you can receive your complementary Contributor and Translator roles!
-(Or join for extra info and status updates!)
+支持的服务商：
 
-## License
-This mod is available under [GNU LGPLv3](https://choosealicense.com/licenses/lgpl-3.0/) as a legal [compromise](https://thisvsthat.io/gpl-vs-lgpl)
-between GPL (my ideal choice) and Minecraft as a product.
+| 服务商 | 类型 | 语言覆盖 |
+|---|---|---|
+| DeepSeek | OpenAI 兼容 | 85 种 |
+| B站 Index-Translate | OpenAI 兼容（免费免 Key） | 85 种 |
+| 混元 Hy-MT2 | OpenAI 兼容（本地） | 仅中/英 |
+| Ollama / LM Studio / vLLM | OpenAI 兼容（本地） | 取决于模型 |
+| MyMemory | GET 接口（免费） | 72 种 |
 
-Despite this not being noted in the license, the following details and restrictions apply to all versions and forks of this project ("The 
-Software") and its derivatives:
+### 朗读模块
 
-1. The Software must list or credit the developer(s) and contributor(s) in a **clear and accessible manner**.
-2. The Software and any modifications made to it **may not** be used for the purpose of training or improving machine learning algorithms,
-including but not limited to artificial intelligence, natural language processing, or data mining. This condition applies to any derivatives,
-modifications, or updates based on the Software code. Any usage of the Software in a training dataset is considered a breach of this License.
-3. The Software may not be included in any dataset used for training or improving machine learning algorithms, including but not limited to 
-artificial intelligence, natural language processing, or data mining.
+- 系统语音（离线）
+- GPT-SoVITS（声音克隆）
+- Piper（离线神经网络 TTS，30+ 语言）
+- Kokoro（轻量开源）
+- 任意 OpenAI 兼容 TTS
 
--
+### 界面多语言
 
-I am working to find a license that includes these terms in them intrinsically, but for now this is the best option to avoid creating a custom, niche license.
+UI 覆盖 **17 种千万级人口语言**：
 
-## Help
+简体中文 / English / 日本語 / 한국어 / Русский / Español / Français / Deutsch /
+Português / Italiano / العربية / हिन्दी / Bahasa Indonesia / Tiếng Việt / Türkçe /
+Українська / Polski
 
-### How to upload log files [log-info]
-There are multiple different types of log file that can be uploaded, all located in `(directory)/logs/`. In order of most useful to least:
-1. `latest.log` - The main log file that is generated every time the game is run. I personally consider it the most useful because it often contains some information
-   about what was going on before the issue or crash occurred.
-2. `crash-report-<date>-<time>.txt` - Generated when the game crashes. It contains a lot of extra information not provided in the other logs, but it typically lacks 
-   context of what happened before the crash.
-3. `debug.log` - Generated when the game is configured to output on the `DEBUG` level. It isn't always present, but it is extremely verbose and contains tons of extra
-   information, albeit at the cost of a LOT of bloat. Although this log can have more relevant information than the `latest.log`, it often just takes up more space.
+跟随 Minecraft 客户端语言自动切换。显示名取自 MC 原生 `language.name`，不是硬编码翻译。
 
-Generally, you should upload one `.log` file and one `crash-report-<date>-<time>.txt` file. If you need more help, feel free to ask!
+---
 
-Now that you have the files, simply submitting them to https://mclo.gs/ will give you a link that you can share with me and others to help diagnose your issue.
-It is really the only site I use, because it provides a lot of useful tools both for me and for you. One of those being that it censors many instances of
-potentially identifiable information, such as your computer's username and IP address, and it allows filtering errors and warnings!
+## 相比上游 Chat Patches 的改动
 
-#### To upload the log(s) without Prism Launcher: [log-upload]
-1. Go to https://mclo.gs/
-2. Click the "Select a file" button, and select a file. **OR** Paste the contents of the log file into the text box.
-3. Click the "Save" button.
-4. Wait for a moment, and it will redirect you to your uploaded log file. Copy the URL from the address bar and paste it wherever you were asked or need to
-   share it.
+### 新增
 
-#### With Prism Launcher: [log-upload-prism]
-1. Open Prism Launcher.
-2. Click on your instance that contains the log you want to upload.
-3. Navigate to the "Minecraft Log" tab (or "Other logs" tab if it's not there)
-4. Click the "Upload" button when the log you want to upload is shown.
-5. Click the "Yes" button in response to the security prompt. If you're worried about the security of the log, you can always censor it yourself before
-   uploading it.
-6. The log should now be uploaded, and you can click the blue underlined text to view it in your browser. The URL is automatically copied to your clipboard,
-   so you can now share it wherever you were asked or need to.
+- `translate/` — 完整翻译引擎（注册表、能力矩阵、降级链、占位符保护、质量校验）
+- `tts/` — TTS 朗读引擎（5 种 provider）
+- `chatstudy/` — 桥接层（把翻译/朗读接到 Chat Patches 的消息管线）
+- `gui/ChatStudyYaclScreen.java` — 设置界面
+- `assets/chatpatches/languages.json` — 语言注册表（85 种语言 / 124 个 locale 映射）
+- 17 个语言文件的多语言支持
 
-### How to access beta releases [beta-install]
-To access beta releases, you'll need a link that looks like this:
+### 修改
 
-https://github.com/mrbuilder1961/ChatPatches/actions/runs/1234567890/ or
+- `ChatPatches.java` — 初始化钩子
+- `ChatUtil.java` — 译文行渲染（支持折行缩进）
+- `TextUtil.java` — 译文行格式化
+- `mixin/gui/ChatComponentMixin.java` — 消息管线接入
 
-https://github.com/mrbuilder1961/ChatPatches/actions/runs/1234567890/artifacts/0987654321
+### 保持不变
 
-#### Now, follow these steps:
-1. Click on the link. If it doesn't instantly download, scroll down, and under the "Artifacts" section, click on "jars" and the download should start. If the text isn't clickable, make sure you're logged in to GitHub. Otherwise, click on `build` -> `ubuntu-latest` (if multiple runs are present) -> `capture build artifacts`; the last line should have a download link
-2. Once the download is complete, open or extract the .zip file.
-3. You should see one folder: `libs`. Open it.
-4. Inside, you should see multiple `.jar` files for different Minecraft versions.
-5. Move the file applicable to your version to your `mods` folder. If your specific version is not present but a newer one is, use that one
-   (ex. you need 1.21.2, but only 1.21.1 and 1.21.4 are present, so use 1.21.4)
-6. If you have another version of Chat Patches already installed, you can move it, rename the file extension to anything but `.jar`, or delete it.
-7. You're good to go! Launching the game should now load the beta version. If you experience any issues, make sure to report them as soon as
-   possible wherever you were given the link (here on GitHub or [the Discord](https://discord.gg/3MqBvNEyMz)).
+Chat Patches 原有的全部功能（聊天记录、时间戳、搜索、右键菜单、边界线等）**完全保留**。
 
-### How to find mod(s) causing compatibility issues [binary-search]
-*(taken from the Fabric Discord bot, not written by me!)*
+---
 
-> A binary search can be used to quickly find a specific mod causing trouble, which can be especially useful when logs don't give a conclusive answer to your issue.
+## 安装
 
-> Start by removing or disabling half of your mods, then test if the problem still occurs. If it does, remove half of the remaining mods and test again. If it doesn't, add back half of the mods you just removed.
+### 必需的
 
-> Keep in mind you don't have to stick strictly to halves each time, and may have to enable some library mods like Fabric API out of order.
+1. [Fabric Loader](https://fabricmc.net/use/) **≥ 0.19.0**（Minecraft **1.21.11**）
+2. [Fabric API](https://modrinth.com/mod/fabric-api)（提供 lifecycle / networking / screen 三个子模块）
+3. [Yet Another Config Lib (YACL)](https://modrinth.com/mod/yacl) v3
 
-> By repeating this on an increasingly smaller set of mods, you'll find the problematic mod within a few iterations.
+**就这三样，没有别的。**
 
-Make sure you leave Chat Patches and its dependencies installed when you're looking for the problematic mod, otherwise it won't do anything to help diagnose the issue.
+### 安装
 
-### How to verify the integrity of releases [verification]
-To verify Chat Patches jars, you'll need to download them from Modrinth so you can download the associated signature (`.asc`) and checksum (`.sha256`) files.
-Once you have everything downloaded and in the same folder, open a terminal and follow the instructions below:
+1. 把 jar 放进 `.minecraft/mods/`
+2. 启动游戏
+3. 设置界面是本模组**内置**的，不需要 Mod Menu 等任何额外 mod
 
-#### Checksums (easiest):
-1. Navigate to https://eakondratiev.github.io/sha256.htm
-2. Open the `{chatpatches-version}.jar.sha256` file with Notepad and copy it (not including any file name, if present)
-3. Paste the checksum into the 'expected checksum' field
-4. Drag or select the appropriate jar to the file field
-5. Read the result!
+### 配置翻译
 
-#### Checksums (manual):
-1. Print the expected checksum with `gc {chatpatches-version}.jar.sha256` (Windows) / `cat {chatpatches-version}.jar.sha256` (Mac/Linux)
-2. Generate the downloaded jar's checksum with `Get-FileHash {chatpatches-version}.jar -Algorithm SHA256` / `sha256sum {chatpatches-version}.jar`
-3. Verify that the checksums are identical. If they're not, double-check the commands are typed properly and try again.
+配置文件在 `config/chatpatches/`：
 
-#### Signatures (manual):
-1. Install Gpg4win (Windows) / GPG (Mac/Linux)
-2. Run `gpg --verify {chatpatches-version}.jar.asc {chatpatches-version}.jar`
+| 文件 | 内容 |
+|---|---|
+| `1-translate.json` | 翻译设置 + 服务商列表 + API Key |
+| `2-readaloud.json` | 朗读设置 + TTS 服务商 |
+| `3-display.json` | 显示设置 |
+| `4-glossary.json` | 术语表 / 不翻译表 / 缩写展开表 |
+| `5-record.json` | 聊天记录设置 |
 
-If anything does not match, first ensure you copied every command **_exactly_**, and that you run it one more time.
-If the checksum or signature still does not match, please message me **privately** on Discord and tell me which version failed verification and where you 
-downloaded it from.
+**改完要重启游戏才生效。**
 
-## Sponsor me!
-- Ko-Fi: https://ko-fi.com/obro1961
+---
 
-[![15% off your first month with code OBRO15!](https://i.imgur.com/9mjs77B.png)](https://billing.kinetichosting.net/aff.php?aff=234)
+## 构建
+
+需要 **JDK 25**。
+
+```bash
+./gradlew :1.21.11-fabric:build
+```
+
+产物在 `versions/1.21.11-fabric/build/libs/`。
+
+---
+
+## 许可证
+
+本项目继承上游 **LGPL-3.0**（见 [LICENSE](LICENSE)）。
+
+这意味着：
+
+- 可以自由使用、修改、分发
+- 可以用于商业用途
+- **修改后的版本必须以 LGPL-3.0 分发**
+- **必须提供源代码**
+- 必须保留原作者版权声明
+
+---
+
+## 借用与致谢
+
+详见 [LICENSES/THIRD-PARTY.md](LICENSES/THIRD-PARTY.md)。
+
+| 项目 | 用途 | 许可证 |
+|---|---|---|
+| [Chat Patches](https://github.com/mrbuilder1961/ChatPatches) | 基础模组（fork 源） | LGPL-3.0 |
+| [franc](https://github.com/wooorm/franc) | 语言代码体系 / 文字系统分类 | MIT |
+| [Roughly Enough Items](https://github.com/shedaniel/RoughlyEnoughItems) | 设置齿轮图标素材 | MIT |
+
+### 特别感谢
+
+- **mrbuilder1961** — Chat Patches 作者，本项目的基础
+- **Titus Wormer** — franc 作者
+- **shedaniel** — REI 作者，图标素材来源
+- Fabric / YACL / Mod Menu 团队
+
+---
+
+## 已知限制
+
+- 只支持 **Minecraft 1.21.11 + Fabric**
+- 翻译功能需要网络和 API Key（或用免费的 B站 Index-Translate）
+- 部分冷门语言（威尼斯语、低地德语等）只有 LLM 能翻，MyMemory 不支持
+- 泰米尔语、波兰语暂未提供 UI 翻译
+
+---
+
+## 反馈
+
+欢迎提 Issue。翻译质量问题请附上：原文、实际译文、期望译文、使用的服务商。

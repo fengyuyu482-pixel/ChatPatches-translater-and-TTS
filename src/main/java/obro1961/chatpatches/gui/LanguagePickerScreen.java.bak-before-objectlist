@@ -1,0 +1,137 @@
+package obro1961.chatpatches.gui;
+
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
+
+/**
+ * 语言选择界面 —— 单列、整行宽的按钮，排布和原版「Language」列表一致
+ * （每行 20px、当前项高亮、超出可见区用翻页）。
+ *
+ * <p>控件全部是原版 {@link Button}：{@code ObjectSelectionList} 在本版本条目渲染不出来，
+ * 不再自研绘制。
+ */
+public class LanguagePickerScreen extends Screen {
+
+    private static final List<String> LANGUAGES = List.of(
+            "英语", "简体中文", "日语", "韩语", "俄语", "西班牙语",
+            "法语", "德语", "葡萄牙语", "意大利语", "越南语",
+            "泰语", "阿拉伯语", "土耳其语", "印尼语"
+    );
+
+    private static final int ROW_H = 20;
+    private static final int ROW_GAP = 2;
+    private static final int LIST_W = 240;
+    private static final int VISIBLE = 9;
+
+    private final Screen parent;
+    private final String initial;
+    private final boolean allowAuto;
+    private final Consumer<String> onPick;
+    private final List<String> options = new ArrayList<>();
+
+    private String selected;
+    private int page;
+
+    public LanguagePickerScreen(Screen parent, String current, boolean allowAuto, Consumer<String> onPick) {
+        super(Component.translatable("选择语言"));
+        this.parent = parent;
+        this.initial = current == null ? "" : current;
+        this.selected = this.initial;
+        this.allowAuto = allowAuto;
+        this.onPick = onPick;
+        if (allowAuto) {
+            options.add("自动检测");
+        }
+        options.addAll(LANGUAGES);
+    }
+
+    @Override
+    protected void init() {
+        int pages = Math.max(1, (options.size() + VISIBLE - 1) / VISIBLE);
+        page = Math.min(page, pages - 1);
+
+        int startY = 44;
+        int x = (this.width - LIST_W) / 2;
+        int from = page * VISIBLE;
+        int to = Math.min(options.size(), from + VISIBLE);
+
+        for (int i = from; i < to; i++) {
+            String value = options.get(i);
+            int y = startY + (i - from) * (ROW_H + ROW_GAP);
+            boolean isSel = value.equals(selected);
+            Component label = Component.literal((isSel ? "✔ " : "") + text(value));
+            addRenderableWidget(Button.builder(label, b -> {
+                selected = value;
+                rebuild();
+            }).bounds(x, y, LIST_W, ROW_H).build());
+        }
+
+        int bottomY = this.height - 56;
+
+        // 翻页按钮（只有需要时出现）
+        if (pages > 1) {
+            addRenderableWidget(Button.builder(Component.literal("▲"), b -> {
+                page = (page - 1 + pages) % pages;
+                rebuild();
+            }).bounds(this.width / 2 - 132, bottomY, 24, 20).build());
+            addRenderableWidget(Button.builder(Component.literal("▼"), b -> {
+                page = (page + 1) % pages;
+                rebuild();
+            }).bounds(this.width / 2 + 108, bottomY, 24, 20).build());
+        }
+
+        int y2 = this.height - 30;
+        addRenderableWidget(Button.builder(Component.translatable("完成"), b -> {
+            onPick.accept(selected);
+            back();
+        }).bounds(this.width / 2 - 122, y2, 120, 20).build());
+        addRenderableWidget(Button.builder(Component.translatable("取消"), b -> {
+            onPick.accept(initial);
+            back();
+        }).bounds(this.width / 2 + 2, y2, 120, 20).build());
+    }
+
+    private String text(String value) {
+        return Component.translatable(value).getString();
+    }
+
+    private void rebuild() {
+        if (this.minecraft != null) {
+            LanguagePickerScreen next = new LanguagePickerScreen(parent, selected, allowAuto, onPick);
+            next.page = page;
+            this.minecraft.setScreen(next);
+        }
+    }
+
+    private void back() {
+        if (this.minecraft != null) {
+            this.minecraft.setScreen(parent);
+        }
+    }
+
+    @Override
+    public void render(GuiGraphics g, int mouseX, int mouseY, float delta) {
+        super.render(g, mouseX, mouseY, delta);
+        g.drawCenteredString(this.font, this.title, this.width / 2, 20, 0xFFFFFF);
+        Component hint = allowAuto ? Component.literal("§8可选「自动检测」") : Component.literal("§8不能选「自动检测」");
+        g.drawCenteredString(this.font, hint, this.width / 2, this.height - 52, 0xAAAAAA);
+    }
+
+    @Override
+    public void onClose() {
+        onPick.accept(initial);
+        back();
+    }
+
+    @Nullable
+    public Screen parent() {
+        return parent;
+    }
+}

@@ -2,6 +2,7 @@
 package obro1961.chatpatches;
 
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.message.v1.ClientSendMessageEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
@@ -38,6 +39,51 @@ public class ChatPatches implements ClientModInitializer {
 	public void onInitializeClient() {
 		// todo: gametests! somewhere somehow!
 
+		// -- chatstudy: 语言注册表 --
+		// ★ 必须在任何翻译路径之前加载：它决定「支持哪些语言」「每个 provider 能翻哪些」
+		//   加载失败会打 ERROR 并让 translate 整体关闭，不做静默降级。
+		obro1961.chatpatches.translate.LanguageRegistry.load();
+
+		// -- chatstudy: 初始化我们这一套（翻译 / 记录 / 朗读）--
+		obro1961.chatpatches.chatstudy.ChatStudyBridge.init(
+			net.fabricmc.loader.api.FabricLoader.getInstance().getConfigDir()
+		);
+
+		// -- chatstudy: 出站翻译 --
+		// 打中文 → 翻成英文再发。拦下原文异步翻，翻了再发（不卡游戏）。
+		ClientSendMessageEvents.ALLOW_CHAT.register(text -> {
+			if(obro1961.chatpatches.chatstudy.ChatStudyBridge.needsOutgoingTranslation(text)) {
+				obro1961.chatpatches.chatstudy.ChatStudyBridge.sendTranslated(text);
+				return false; // 拦下原文，翻译好后由我们发
+			}
+			return true;
+		});
+		// 出站记录：只在【消息真的发出去】时记一笔。
+		//
+		// 以前挂在 CHAT_CANCELED 上 —— 那是"被取消"的事件，语义就是反的。后果实测可见：
+		//   · 被拦下的消息：CHAT_CANCELED 记一条原文，sendTranslated 又记一条译文 → 同一次发送写两条
+		//   · 没被拦下的（英文）：CHAT_CANCELED 根本不触发 → 一条都不记
+		// 改成 CHAT：不管是我们翻译后发的、还是原样发的，都恰好记一次，
+		// 而且记的是【实际发出去的那句】。
+		ClientSendMessageEvents.CHAT.register(text ->
+			obro1961.chatpatches.chatstudy.ChatStudyBridge.onOutgoing(text));
+
+		// chatstudy: 出站翻译的【命令】那一半 —— 带频道的发言。
+		//
+		// 有些服务器的全球频道要打成命令发（/g 内容）。命令走 ALLOW_COMMAND，
+		// 【不经过】上面的 ALLOW_CHAT —— 打出去的中文就没人管了。
+		// 用户实测就是这个现象：「/g 不行，/l 可以」（/l 是切模式后直接打字 = 普通聊天）。
+		//
+		// 只认配置 channelCommands 里列出的命令词，而且只翻命令词【之后】那一整段 ——
+		// /msg Bob 你好 这种绝不能把收信人名字也翻掉。
+		ClientSendMessageEvents.ALLOW_COMMAND.register(command -> {
+			if(obro1961.chatpatches.chatstudy.ChatStudyBridge.needsCommandTranslation(command)) {
+				obro1961.chatpatches.chatstudy.ChatStudyBridge.sendTranslatedCommand(command);
+				return false; // 拦下原命令，翻译好后由我们发
+			}
+			return true;
+		});
+
 		// -- chat log saving events --
 		// according to my testing, this event works as needed when the game disconnects and on crashes if the game is functional at that point
 		// testing details (server=hypixel): normal disconnects work on both world and server, manual F3+C crash works on world but NOT server
@@ -45,12 +91,30 @@ public class ChatPatches implements ClientModInitializer {
 		//stonecutter: * events *
 		ClientPlayConnectionEvents.DISCONNECT.register((network, client) -> ChatLog.serialize());
 		ScreenEvents.AFTER_INIT.register((client, screen, sW, sH) -> ChatLog.saveIfPaused(screen));
-		ClientTickEvents./*? if >=26.1 {*/END_LEVEL_TICK/*?} else {*//*END_WORLD_TICK*//*?}*/.register(world -> ChatLog.tickSaveCounter());
+		ClientTickEvents./*? if >=26.1 {*//*END_LEVEL_TICK*//*?} else {*/END_WORLD_TICK/*?}*/.register(world -> ChatLog.tickSaveCounter());
+
+		// chatstudy: 聊天栏改动队列的落地时机。
+		//
+		// ★ 全项目【唯一】允许修改聊天栏（allMessages / rescaleChat）的地方就在这里 ——
+		//   挂译文、改造回显都只往队列里写一行，由这里统一落地。
+		//
+		//   为什么用 END_CLIENT_TICK 而不是上面那个 END_WORLD_TICK：
+		//   后者只在世界里跑。译文可能在退出世界后才回来（断线、切服务器），
+		//   用世界 tick 的话这类改动会一直压在队列里。客户端 tick 一直跑，没这个问题。
+		ClientTickEvents.END_CLIENT_TICK.register(client -> obro1961.chatpatches.chatstudy.ChatStudyBridge.tick());
 
 		// -- chat log loader and boundary sender --
 		ClientPlayConnectionEvents.JOIN.register((network, packetSender, client) -> {
 			// loads once
 			ChatLog.load(false);
+
+			// chatstudy: 切到新地点 —— 决定记录写到哪个文件夹，并写一行会话头
+			obro1961.chatpatches.chatstudy.ChatStudyBridge.onJoin();
+
+			// chatstudy: 把最近的记录灌回聊天栏（这就是"重启后还能往上翻"的原理）
+			// ★ 2026-10-20：不再写死 2000 —— 读 5-record.json 的 restoreLimit（0 = 全灌），
+			//   并且一次启动只灌一次（D6：世界只有一条时间线，换服不重贴）。
+			obro1961.chatpatches.chatstudy.ChatStudyBridge.restoreRecent();
 
 			/*? if >=1.21.9 {*/
 			try {
@@ -206,7 +270,7 @@ public class ChatPatches implements ClientModInitializer {
 		Minecraft mc = Minecraft.getInstance();
 		mc.execute(() ->
 			SystemToast.add(
-				mc./*? if >26.1.2 {*/gui.toastManager/*?} elif >=1.21.2 {*//*getToastManager*//*?} else {*//*getToasts*//*?}*/(),
+				mc./*? if >26.1.2 {*//*gui.toastManager*//*?} elif >=1.21.2 {*/getToastManager/*?} else {*//*getToasts*//*?}*/(),
 				error
 					/*~ if <=1.20.2 'Id' -> 'Ids' {*/
 					? SystemToast.SystemToastId.PACK_LOAD_FAILURE

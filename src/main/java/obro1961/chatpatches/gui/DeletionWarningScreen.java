@@ -2,7 +2,7 @@ package obro1961.chatpatches.gui;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.chat.GuiMessage;
+import net.minecraft.client.GuiMessage;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.layouts.Layout;
 import net.minecraft.client.gui.layouts.LinearLayout;
@@ -43,13 +43,13 @@ public class DeletionWarningScreen extends WarningScreen {
 		this.parent = parent;
 		this.chatMessage = chatMessage;
 		//noinspection DataFlowIssue: that's what i said too. man fuck 1.20.1
-		this.scroll = Objects.requireNonNullElse(minecraft, Minecraft.getInstance()).gui.hud.getChat().chatScrollbarPos;
+		this.scroll = Objects.requireNonNullElse(minecraft, Minecraft.getInstance()).gui.getChat().chatScrollbarPos;
 	}
 
 
 	private void close() {
-		minecraft.gui.setScreen(parent);
-		minecraft.gui.hud.getChat().scrollChat(scroll);
+		minecraft.setScreen(parent);
+		minecraft.gui.getChat().scrollChat(scroll);
 	}
 
 	/**
@@ -62,6 +62,8 @@ public class DeletionWarningScreen extends WarningScreen {
 			if(stopShowing.selected()) {
 				ChatPatches.config.contextDeletionWarning = false;
 			}
+			// R7/D16: 写 delete{targetSeq} —— 只有真点了继续才记
+			obro1961.chatpatches.chatstudy.ChatStudyBridge.noteDeletion(chatMessage.content());
 			ChatUtil.deleteMessage(chatMessage, ChatPatches.config.contextDeletionSizzle);
 			close();
 		});

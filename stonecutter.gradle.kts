@@ -2,7 +2,9 @@ plugins {
     id("dev.kikugie.stonecutter")
 }
 
-stonecutter active "26.3-fabric"
+// ★ chatstudy 补丁：原本是 "26.3-fabric"，但我们把 targets 砍到只剩 1.21.11，
+// 未注册的版本不能作为 active，否则报 "Version '26.3-fabric' is not registered"。
+stonecutter active "1.21.11-fabric"
 
 
 stonecutter tasks {

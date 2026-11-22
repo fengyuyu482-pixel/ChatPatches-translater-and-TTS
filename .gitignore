@@ -1,19 +1,33 @@
+# Gradle
 .gradle/
 build/
-out/
-classes/
-*.launch
+versions/*/build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# IDE
 .idea/
 *.iml
-*.ipr
-*.iws
-.settings/
 .vscode/
+.eclipse/
+*.launch
+.settings/
 bin/
 .classpath
 .project
-*.DS_Store
-run/
-remappedSrc/
 
-secrets.json
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 运行产物
+run/
+logs/
+crash-reports/
+*.log
+
+# 本地配置（可能含 API Key）
+config/
+*.local.json
+.env
+!*.env.example

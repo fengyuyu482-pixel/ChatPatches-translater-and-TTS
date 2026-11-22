@@ -1,6 +1,6 @@
 package obro1961.chatpatches.gui;
 
-import com.mojang.blaze3d.platform.InputConstants;
+import org.lwjgl.glfw.GLFW;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.ImageButton;
 
@@ -43,11 +43,11 @@ public class SearchButton extends ImageButton {
         //?}
 
         if(active && visible && /*? if <1.21.2 {*//*clicked*//*?} else {*/isMouseOver/*?}*/(mX, mY)) {
-            if(button == InputConstants.MOUSE_BUTTON_LEFT) {
+            if(button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                 this.playDownSound(Minecraft.getInstance().getSoundManager());
                 onPress.onPress(this);
                 return true;
-            } else if(button == InputConstants.MOUSE_BUTTON_RIGHT) {
+            } else if(button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
                 this.playDownSound(Minecraft.getInstance().getSoundManager());
                 onRightClick.onPress(this);
                 return true;

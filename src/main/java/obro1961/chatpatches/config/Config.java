@@ -16,7 +16,7 @@ import net.minecraft.client.gui.components.ChatComponent;
 import net.minecraft.client.gui.screens.ConfirmLinkScreen;
 import net.minecraft.client.gui.screens.ConfirmScreen;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.multiplayer.chat.GuiMessage;
+import net.minecraft.client.GuiMessage;
 import net.minecraft.client.player.RemotePlayer;
 import net.minecraft.network.chat.*;
 import net.minecraft.util.GsonHelper;
@@ -68,7 +68,7 @@ import obro1961.chatpatches.integration.ChatHeadsIntegration;
 public class Config {
     public static final Config DEFAULTS = new Config();
 	public static final String PLACEHOLDER = "$";
-    public static final Path PATH = FabricLoader.getInstance().getConfigDir().resolve("chatpatches.json");
+    public static final Path PATH = FabricLoader.getInstance().getConfigDir().resolve("chatpatches").resolve("3-display.json");
 
 	protected static final int IO_THRESHOLD_SUGGESTION = 500;
 
@@ -133,7 +133,16 @@ public class Config {
 	public int compactDistance = 0;
 	public List<String> counterDividerList = ObjectArrayList.of("", "\n", "-----------------------------------------------------");
 
-    public boolean boundary = true;
+	/**
+	 * stock 的「跨维度分界线」：单人切主世界/下界/末地时插一行 {@code [维度名]}。
+	 *
+	 * <p><b>默认关（用户 2026-10-20 决定）：</b>「跨维度不需要分界线，为什么要分界线，又不是换服」。
+	 * 它跟"历史记录分界"是两件事：前者是 stock 的维度切换提示，后者（D14，方案 B）是
+	 * 灌回历史时用的灰色 {@code ────} 横线，由我们自己的记录层负责，跟这个开关无关。
+	 *
+	 * <p>功能<b>不删</b>，留开关（D14：不删功能、只改默认）。想恢复就把它改 true。
+	 */
+    public boolean boundary = false;
 	@StringConstraints
 	public String boundaryFormat = "&8[&r$&8]";
 	public int boundaryColor = AQUA;
@@ -147,8 +156,16 @@ public class Config {
 	public String nameFormat = "<$>";
 	public int nameColor = WHITE;
 
-	@IntConstraints(min = 1, max = Short.MAX_VALUE, interval = 16)
-    public int chatMaxMessages = 16384;
+	/**
+	 * 聊天列表上限。<b>0 = 不限</b>（D4）。
+	 *
+	 * <p>以前是 16384 —— 用户澄清过：16384 是<b>聊天列表</b>上限，不是灌回上限
+	 * （灌回条数单独配）。要"往上翻多少有多少"，就必须允许 0，
+	 * 并在两个消费点都把它当"没有上限"：
+	 * {@link ChatLog#enforceLimits()} 与 {@code ChatComponentMixin#moreMessages}。
+	 */
+	@IntConstraints(min = 0, max = Short.MAX_VALUE, interval = 16)
+    public int chatMaxMessages = 0;
 	@IntConstraints(max = 600) /*mc().getWindow().getGuiScaledWidth()*/
 	public int chatWidth = 0;
 	@IntConstraints(max = 600) /*mc().getWindow().getGuiScaledHeight()*/
@@ -164,6 +181,10 @@ public class Config {
 	 */
 	public boolean onlyInvasiveDrafting = false;
 
+	/** 设置按钮 X 偏移（px，正=右）。原点 = 准星（屏幕中心）；默认 72 = 480x248 下对齐聊天栏右缘。 */
+	public int gearOffsetX = 72;
+	/** 设置按钮 Y 偏移（px，正=上）。原点 = 准星（屏幕中心）；默认 54 = 480x248 下聊天底部。 */
+	public int gearOffsetY = -64;
 	public boolean contextMenu = true;
 	public boolean contextDeletionWarning = true;
 	public boolean contextDeletionSizzle = true;
@@ -212,7 +233,7 @@ public class Config {
                 if(clicked) {
 					ConfirmLinkScreen.confirmLinkNow(/*? if >1.20.2 {*/ parent, link /*?} else {*//*str, parent, true*//*?}*/);
 				} else {
-					mc().gui.setScreen(parent);
+					mc().setScreen(parent);
 				}
             },
             Component.translatable(YaclConfig.HELP_PREFIX + "missing").withStyle(ChatFormatting.RED),
@@ -354,7 +375,7 @@ public class Config {
     public void sendBoundaryLine() {
         if(!boundary || vanillaClearing) return;
 
-		ChatComponent chat = mc().gui.hud.getChat();
+		ChatComponent chat = mc().gui.getChat();
         List<GuiMessage> messages = chat.allMessages;
 		Boundary currentLevel = Boundary.createFromCurrentLevel();
 
@@ -370,7 +391,7 @@ public class Config {
 				ChatUtil.deleteMessage(0, false);
 			}
 
-			chat./*? if >=26.1 {*/addClientSystemMessage/*?} else {*//*addMessage*//*?}*/(boundaryLine);
+			chat./*? if >=26.1 {*//*addClientSystemMessage*//*?} else {*/addMessage/*?}*/(boundaryLine);
 
 		} catch(RuntimeException e) {
 			LOGGER.warn("An error occurred while sending the boundary line:", e);
@@ -412,7 +433,7 @@ public class Config {
 		int armor = player.getArmorValue();
 		float absorption = player.getAbsorptionAmount();
 		float health = player.getMaxHealth();
-		double scale = mc().gui.hud.getChat().getScale();
+		double scale = mc().gui.getChat().getScale();
 
 		int playerState = Objects.hash(armor, absorption, health, scale);
 		// if the last player state is the same as the current one and a shift value is available, use it
@@ -453,7 +474,17 @@ public class Config {
 		long start = System.currentTimeMillis();
 		LOGGER.info("Reading...");
 
-		if(!Files.exists(PATH)) {
+		// ★ 改名接管：老布局在 config/chatpatches.json，新布局在 config/chatpatches/3-display.json。
+		// 只读一次旧路径，保存时写新路径；旧文件保留不删，用户设置一个都不动（C5）。
+		Path path = PATH;
+		if(!Files.exists(path)) {
+			Path legacy = FabricLoader.getInstance().getConfigDir().resolve("chatpatches.json");
+			if(Files.exists(legacy)) {
+				path = legacy;
+				LOGGER.info("[chatpatch] 读到老位置配置 chatpatches.json，本次沿用；保存时会写到 chatpatches/3-display.json（旧文件保留）");
+			}
+		}
+		if(!Files.exists(path)) {
 			config.resetValues();
 			LOGGER.info("No config file found; using default values");
 			LOGGER.info("Writing defaults to disk");
@@ -463,7 +494,7 @@ public class Config {
 
 		try {
 			// on different lines to make exception line numbers more useful
-			String raw = Files.readString(PATH);
+			String raw = Files.readString(path);
 			JsonObject json = GsonHelper.parse(raw);
 
 			// note: removed registry-backed JsonOps here bc this loads before the world is available, throwing an NPE. shouldn't matter tho
@@ -471,11 +502,34 @@ public class Config {
 				.resultOrPartial(e -> logReportMsg(new JsonParseException(e)))
 				.orElseThrow();
 
-			LOGGER.info("Read config data from '{}'!", PATH);
+			LOGGER.info("Read config data from '{}'!", path);
+
+			// ★ D4 一次性默认值迁移（2026-10-20）。
+			//
+			//   老文件里躺着的是**旧默认** 16384 —— 用户从没手工设过它，是 stock 写进去的。
+			//   现在默认改成 0 = 不限；如果原样沿用，D4 对老用户等于没生效。
+			//   所以只在【本次是从老位置读的】且【值正好是旧默认 16384】时改成 0，
+			//   并落一条日志。用户自己填过别的数字 → 一个字都不动（C5）。
+			if(!path.equals(PATH) && config.chatMaxMessages == 16384) {
+				config.chatMaxMessages = 0;
+				LOGGER.info("[chatpatch] 聊天列表上限按 D4 改为不限（旧默认 16384 → 0）；要限制请自己填数字");
+				serialize();
+			}
+
+			// ★ 跨维度分界线默认关（用户 2026-10-20：「跨维度不需要分界线，又不是换服」）。
+			//
+			//   老文件里是 stock 写的 {@code true}（它自己插的默认值），原样沿用等于没改。
+			//   所以只在【本次从老位置读】且【值为 true】时改 false；功能不删，留开关。
+			//   注意：这跟"历史记录分界"（D14/R9）不是同一个东西，那条由记录层单独实现。
+			if(!path.equals(PATH) && config.boundary) {
+				config.boundary = false;
+				LOGGER.info("[chatpatch] 跨维度分界线默认关闭（用户：不是换服，不需要）；要恢复把 boundary 改 true");
+				serialize();
+			}
 		} catch(IOException | NoSuchElementException e) {
 			config.resetValues();
 			String action = e instanceof NoSuchElementException ? "decode" : "read";
-			LOGGER.error("An error occurred while trying to {} config data from '{}', backing up and using default settings:", action, PATH, e);
+			LOGGER.error("An error occurred while trying to {} config data from '{}', backing up and using default settings:", action, path, e);
 			backup();
 		} catch(RuntimeException e) {
 			config.resetValues();
@@ -495,6 +549,7 @@ public class Config {
 		executeIoTask(() -> {
 			long start = System.currentTimeMillis();
 			LOGGER.info("Saving...");
+			try { Files.createDirectories(PATH.getParent()); } catch(IOException ignored) { }
 
 			try {
 				JsonElement json = config.encodeStart(JsonOps.INSTANCE)

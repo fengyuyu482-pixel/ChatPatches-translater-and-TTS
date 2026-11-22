@@ -169,5 +169,22 @@
     "text.chatpatches.context.delete.confirm": "이 메시지를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
     "text.chatpatches.context.unknown": "/§e!§r\\ '§6%s§r'에 대한 알 수 없는 데이터입니다. 이 문제를 신고해주세요!",
 
-    "text.chatpatches.restored": "메시지 복원됨"
+    "text.chatpatches.restored": "메시지 복원됨",
+  "chatstudy.service.kokoro": "Kokoro",
+  "chatstudy.service.hunyuan": "Hunyuan Hy-MT2",
+  "chatstudy.notice.notRunning": "Service not running",
+  "chatstudy.service.local": "Local translation (Ollama)",
+  "chatstudy.service.piper": "Piper",
+  "chatstudy.notice.unconfigured": "Not configured",
+  "chatstudy.notice.unknownReason": "Unknown reason",
+  "chatstudy.notice.cannotReach": "[ChatPatch] Cannot connect to %s: %s",
+  "chatstudy.notice.connected": "[ChatPatch] Connected: %s",
+  "chatstudy.service.sovits": "GPT-SoVITS",
+  "chatstudy.service.onlineTts": "Online speech (OpenAI-compatible)",
+  "chatstudy.service.online": "Online translation (DeepSeek)",
+  "chatstudy.notice.langLineOk": "[ChatPatch] %s: %s → %s",
+  "chatstudy.notice.langLineAuto": "[ChatPatch] %s: Auto Detect",
+  "chatstudy.notice.langLineNoAuto": "[ChatPatch] %s: Auto Detect is not allowed",
+  "chatstudy.notice.langLineBad": "[ChatPatch] %s: not recognised %s",
+  "chatstudy.notice.langLineEmpty": "[ChatPatch] %s: not set"
 }

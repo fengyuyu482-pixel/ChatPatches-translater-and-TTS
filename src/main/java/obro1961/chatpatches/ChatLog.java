@@ -18,8 +18,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.ChatComponent;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.multiplayer.chat.GuiMessage;
-import net.minecraft.client.multiplayer.chat.GuiMessageTag;
+import net.minecraft.client.GuiMessage;
+import net.minecraft.client.GuiMessageTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MessageSignature;
 import net.minecraft.util.GsonHelper;
@@ -46,8 +46,8 @@ import java.util.function.Function;
 import static obro1961.chatpatches.ChatPatches.*;
 
 //? if >=26.1 {
-import net.minecraft.client.multiplayer.chat.GuiMessageSource;
-//?}
+/*import net.minecraft.client.GuiMessageSource;
+*///?}
 
 /**
  * Represents the chat log file in the run directory located at {@link #PATH}.
@@ -74,7 +74,7 @@ public class ChatLog {
 		MessageSignature signature,
 		ChatUtil.MessageData messageData,
 		/*? if <=1.20.4 {*//*int addedTime,*//*?}*/
-		/*? if >=26.1 {*/GuiMessageSource source,/*?}*/
+		/*? if >=26.1 {*//*GuiMessageSource source,*//*?}*/
 		GuiMessageTag tag
 		/*? if <=1.20.4 {*//*, boolean refreshing*//*?}*/
 	) {}
@@ -149,7 +149,7 @@ public class ChatLog {
 		Component component,
 		MessageSignature signature,
 		/*? if <=1.20.4 {*//*int addedTime,*//*?}*/
-		/*? if >=26.1 {*/GuiMessageSource source,/*?}*/
+		/*? if >=26.1 {*//*GuiMessageSource source,*//*?}*/
 		GuiMessageTag tag
 		/*? if <=1.20.4 {*//*, boolean refreshing*//*?}*/
 	) {
@@ -162,7 +162,7 @@ public class ChatLog {
 			signature,
 			ChatUtil.messageData,
 			/*? if <=1.20.4 {*//*addedTime,*//*?}*/
-			/*? if >=26.1 {*/source,/*?}*/
+			/*? if >=26.1 {*//*source,*//*?}*/
 			tag
 			/*? if <=1.20.4 {*//*, refreshing*//*?}*/
 		));
@@ -234,6 +234,11 @@ public class ChatLog {
 	 * therefore not worth the hassle.
      */
     private static void enforceLimits() {
+        // ★ 0 = 不限（D4）。以前这里直接减，0 会把整个列表删光 ——
+        //   配置写 0 的本意是"别裁"，不是"全删"。
+        if (config.chatMaxMessages <= 0) {
+            return;
+        }
         if(messageCount() > config.chatMaxMessages) {
 			messages.removeElements(0, messageCount() - config.chatMaxMessages);
 		}
@@ -363,6 +368,15 @@ public class ChatLog {
      * @see <a href="https://github.com/mrbuilder1961/ChatPatches/issues/180">#180</a>
      */
     public static void serialize() {
+        // chatstudy: 改成"即写即落"之后，这里不再往 chatlog.json 写整份文件。
+        //
+        // 原实现每次保存都把整个文件清空重写（Files.writeString + TRUNCATE_EXISTING），
+        // 记录越大越慢，而且写到一半崩溃 = 整份记录报废（它的备份机制备份的也是已经坏掉的那份）。
+        // 我们现在每收到一条消息就往 config/chatpatches/chatlogs/日期/地点/聊天记录.jsonl
+        // 追加一行 —— 崩溃最多丢最后一行，前面全在。
+        if(obro1961.chatpatches.chatstudy.ChatStudyBridge.ready()) {
+            return;
+        }
         if(!config.chatlog) {
 			return;
 		}
@@ -446,12 +460,12 @@ public class ChatLog {
     public static void restore() {
         if(messageCount() > 0 || historyCount() > 0) {
 			/*? if >=1.21.9 {*/RenderSystem.assertOnRenderThread();/*?}*/
-			ChatComponent chat = mc().gui.hud.getChat();
+			ChatComponent chat = mc().gui.getChat();
 
 			// todo i think we just need to mixin to the delayed message queue thing, and here we cache the current setting, set it to ~5s delay, and mark some flag field true to be used in the mixin(s)!
 
 			history.forEach(chat::addRecentChat);
-			messages.forEach(msg -> chat.addMessage(msg, null, /*? if >=26.1 {*/GuiMessageSource.SYSTEM_CLIENT,/*?}*/ RESTORED_INDICATOR));
+			messages.forEach(msg -> chat.addMessage(msg, null, /*? if >=26.1 {*//*GuiMessageSource.SYSTEM_CLIENT,*//*?}*/ RESTORED_INDICATOR));
 		}
 
 		LOGGER.info("Restored {} messages and {} history messages!", messageCount(), historyCount());
@@ -499,7 +513,7 @@ public class ChatLog {
 			return;
 		}
 
-		ChatComponent chat = mc().gui.hud.getChat();
+		ChatComponent chat = mc().gui.getChat();
 		int pendingCount = pendingMessages.size();
 		int drained = 0;
 
@@ -511,7 +525,7 @@ public class ChatLog {
 					pending.component(),
 					pending.signature(),
 					/*? if <=1.20.4 {*//*pending.addedTime(),*//*?}*/
-					/*? if >=26.1 {*/pending.source(),/*?}*/
+					/*? if >=26.1 {*//*pending.source(),*//*?}*/
 					pending.tag()
 					/*? if <=1.20.4 {*//*, pending.refreshing()*//*?}*/
 				);
@@ -535,8 +549,8 @@ public class ChatLog {
 	 */
 	public static void hideRecentMessages() {
 		if(messageCount() > 0 && historyCount() > 0) {
-			int ticks = mc().gui./*? if >26.1.2 {*/hud./*?}*/getGuiTicks();
-			var visibles = mc().gui.hud.getChat().trimmedMessages;
+			int ticks = mc().gui./*? if >26.1.2 {*//*hud.*//*?}*/getGuiTicks();
+			var visibles = mc().gui.getChat().trimmedMessages;
 
 			// sets all messages (restored and boundary line) to an addedTime of -200 to prevent instant rendering! (#42)
 			// now adds the message's addedTime to account for any extra offsets from the deserialization desync from the main game thread
@@ -544,11 +558,11 @@ public class ChatLog {
 				var l = visibles.get(i);
 				if(ticks - l.addedTime() < 200) {
 					int newTime = -(200 + l.addedTime());
-					/*? if >=26.1 {*/var lp = l.parent();/*?}*/
+					/*? if >=26.1 {*//*var lp = l.parent();*//*?}*/
 					visibles.set(i, new GuiMessage.Line(
-						/*? if >=26.1 {*/new GuiMessage(newTime, lp.content(), lp.signature(), lp.source(), lp.tag())/*?} else {*//*newTime*//*?}*/,
+						/*? if >=26.1 {*//*new GuiMessage(newTime, lp.content(), lp.signature(), lp.source(), lp.tag())*//*?} else {*/newTime/*?}*/,
 						l.content(),
-						/*? if <=1.21.11 {*//*l.tag(),*//*?}*/
+						/*? if <=1.21.11 {*/l.tag(),/*?}*/
 						l.endOfEntry()
 					));
 				} else {
@@ -576,6 +590,19 @@ public class ChatLog {
 	 * assumes the render thread will always be used.
      */
 	public static void load(boolean force) {
+		// chatstudy: 接管了持久化之后，这里也不能再加载它自己的 chatlog.json。
+		//
+		// 之前只禁了 serialize()（保存），忘了禁 load()（加载）—— 结果它照样把那份
+		// 23 MB / 16384 条的 chatlog.json 整个灌回聊天栏。实测日志：
+		//   Parsed 16384 messages and 3266 sent messages!
+		//   [ChatLog.deserialize] Took 2.413 seconds, but should've taken less than 1.0s
+		//   Restored 16384 messages and 3266 history messages!
+		// 渲染线程扛不住这么多消息，游戏直接卡死。
+		//
+		// 灌回历史的活现在由 ChatStudyBridge.restoreRecent() 做（读我们自己的文件夹，默认 2000 条）。
+		if(obro1961.chatpatches.chatstudy.ChatStudyBridge.ready()) {
+			return;
+		}
 		if(config.chatlog && ((messages == EMPTY_LIST && history == EMPTY_LIST) || force)) {
 			if(isWorking()) {
 				return;

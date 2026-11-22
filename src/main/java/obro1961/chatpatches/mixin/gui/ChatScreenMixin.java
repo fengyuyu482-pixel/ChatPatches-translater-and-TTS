@@ -3,7 +3,7 @@ package obro1961.chatpatches.mixin.gui;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.mojang.blaze3d.platform.InputConstants;
+import org.lwjgl.glfw.GLFW;
 import it.unimi.dsi.fastutil.booleans.BooleanArrayList;
 import it.unimi.dsi.fastutil.booleans.BooleanList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -13,11 +13,11 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.*;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.multiplayer.chat.GuiMessage;
+import net.minecraft.client.GuiMessage;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
@@ -87,12 +87,12 @@ public abstract class ChatScreenMixin extends Screen implements ChatScreenAccess
 	@Shadow protected String initial;
 	@Shadow private int historyPos;
 	/*? if >=26.1 {*/
-	/**
+	/*/^*
 	 * <li>True -> ChatScreen (InBed is always false)</li>
 	 * <li>False -> InBedChatScreen, ChatScreen</li>
-	 */
+	 ^/
 	@Shadow	@Final private boolean closeOnSubmit;
-	/*?}*/
+	*//*?}*/
 
 
 	// search text
@@ -115,6 +115,8 @@ public abstract class ChatScreenMixin extends Screen implements ChatScreenAccess
 									 MENU_Y_OFFSET = SEARCH_Y_OFFSET - MENU_HEIGHT - 6;
 
 	// context menu
+	@Unique private static final int GEAR = 20;
+	@Unique private static final net.minecraft.resources.Identifier GEAR_TEX = net.minecraft.resources.Identifier.fromNamespaceAndPath("chatpatches", "textures/gui/settings_gear.png");
 	@Unique private static ContextMenu contextMenu = new ContextMenu(null, -1, -1);
 	/**
 	 * @see #charTyped(CharacterEvent)
@@ -175,7 +177,7 @@ public abstract class ChatScreenMixin extends Screen implements ChatScreenAccess
 			}
 		}
 		//? if >=1.21.9 {
-		else if(!config.messageDrafting && !saveChatDrafts() /*? if >=26.1 {*/&& isDraft && this.closeOnSubmit/*?}*/) {
+		else if(!config.messageDrafting && !saveChatDrafts() /*? if >=26.1 {*//*&& isDraft && this.closeOnSubmit*//*?}*/) {
 			// ATTENTION: don't mess with this shit. at all. it makes no sense. if you're going to, please
 			// just rewrite the whole system and document how it all works. thanks!
 
@@ -198,6 +200,12 @@ public abstract class ChatScreenMixin extends Screen implements ChatScreenAccess
 	 */
 	@Inject(method = "init", at = @At("TAIL"))
 	protected void initSearchWidgets(CallbackInfo ci) {
+		// 原版按钮底框 + 齿轮图标（和 REI 那种“按钮里嵌图标”一致）
+		this.addRenderableWidget(net.minecraft.client.gui.components.Button.builder(
+			net.minecraft.network.chat.Component.literal(""),
+			b -> { if (this.minecraft != null) this.minecraft.setScreen(obro1961.chatpatches.gui.ChatStudyYaclScreen.build(this)); })
+			.bounds(gearX(), gearY(), GEAR, GEAR).build());
+		this.addRenderableWidget(new obro1961.chatpatches.gui.GearIcon(gearX(), gearY(), GEAR));
 		searchButton = new SearchButton(2, height - 35,
 			me -> {
 				showSearchBar = !showSearchBar;
@@ -263,8 +271,8 @@ public abstract class ChatScreenMixin extends Screen implements ChatScreenAccess
 	 *     </ol>
 	 * </ol>
 	 */
-	@Inject(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;extractRenderState(Lnet/minecraft/client/gui/GuiGraphicsExtractor;IIF)V"))
-	private void renderCustomWidgets(GuiGraphicsExtractor graphics, int mX, int mY, float delta, CallbackInfo ci) {
+	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))
+	private void renderCustomWidgets(GuiGraphics graphics, int mX, int mY, float delta, CallbackInfo ci) {
 		graphics.pose().pushMatrix();
 
 		//? if <1.21.6 {
@@ -274,12 +282,12 @@ public abstract class ChatScreenMixin extends Screen implements ChatScreenAccess
 
 		if(showSearchBar && config.search) {
 			graphics.fill(SEARCH_X - 2, height + SEARCH_Y_OFFSET - 2, (int) (width * (SEARCH_W_MULTIPLIER + 0.06)), height + SEARCH_Y_OFFSET + SEARCH_HEIGHT - 2, minecraft.options.getBackgroundColor(Integer.MIN_VALUE));
-			searchField.extractRenderState(graphics, mX, mY, delta);
+			searchField.render(graphics, mX, mY, delta);
 
 			// renders a suggestion-esq error message if the regex search is invalid
 			if(searchError != null) {
 				int x = searchField.getX() + 8 + (int) (width * SEARCH_W_MULTIPLIER);
-				graphics./*? if >=26.1 {*/text/*?} else {*//*drawString*//*?}*/(font, searchError.getMessage().split(System.lineSeparator())[0], x, searchField.getY(), RenderUtil.smartOpaque(Colors.DARK_RED));
+				graphics./*? if >=26.1 {*//*text*//*?} else {*/drawString/*?}*/(font, searchError.getMessage().split(System.lineSeparator())[0], x, searchField.getY(), RenderUtil.smartOpaque(Colors.DARK_RED));
 			}
 		}
 
@@ -294,14 +302,15 @@ public abstract class ChatScreenMixin extends Screen implements ChatScreenAccess
 			//Identifier DEMO = Identifier.withDefaultNamespace("textures/gui/demo_background.png");
 			//graphics.blit(RenderPipelines.GUI_TEXTURED, DEMO, MENU_X, MENU_Y_OFFSET + height, 0, 0, 248, 166, 256, 256); // too big
 
-			caseSensitiveButton.extractRenderState(graphics, mX, mY, delta);
-			regexButton.extractRenderState(graphics, mX, mY, delta);
+			caseSensitiveButton.render(graphics, mX, mY, delta);
+			regexButton.render(graphics, mX, mY, delta);
 		}
 
 		graphics.pose().popMatrix(); // stop shifting before the context menu renders so the chat field doesn't cut it off
 
-		contextMenu.extractRenderState(graphics, mX, mY, delta);
+		contextMenu.render(graphics, mX, mY, delta);
 	}
+
 
 	/**
 	 * Only renders a tooltip if the mouse is not hovering over the (opened)
@@ -324,7 +333,7 @@ public abstract class ChatScreenMixin extends Screen implements ChatScreenAccess
 		if(input.getValue().equals("/")) {
 			messageDraft = ""; // don't retain blank commands
 			//? if >=1.21.9 {
-			minecraft.gui.hud.getChat().discardDraft(); // un-fucks the vanilla system
+			minecraft.gui.getChat().discardDraft(); // un-fucks the vanilla system
 			//?}
 		} else {
 			messageDraft = input.getValue();
@@ -332,7 +341,7 @@ public abstract class ChatScreenMixin extends Screen implements ChatScreenAccess
 		searchDraft = searchField.getValue();
 
 		if(!searchField.getValue().isEmpty()) {
-			minecraft.gui.hud.getChat().rescaleChat(); // reset the hud if it had anything in the field (#102)
+			minecraft.gui.getChat().rescaleChat(); // reset the hud if it had anything in the field (#102)
 		}
 
 		contextMenu.close(this::removeWidget);
@@ -389,7 +398,7 @@ public abstract class ChatScreenMixin extends Screen implements ChatScreenAccess
 		method = "keyPressed",
 		at = @At(
 			value = "INVOKE",
-			target = "Lnet/minecraft/client/" + /*? if >26.1.2 {*/"gui/Gui"/*?} else {*//*"Minecraft"*//*?}*/ + ";setScreen(Lnet/minecraft/client/gui/screens/Screen;)V"
+			target = "Lnet/minecraft/client/" + /*? if >26.1.2 {*//*"gui/Gui"*//*?} else {*/"Minecraft"/*?}*/ + ";setScreen(Lnet/minecraft/client/gui/screens/Screen;)V"
 			/*? if <=1.21.8 {*/
 			/*, ordinal = 1, // post 1.21.9 partial drafting feature, only one call exists
 			shift = At.Shift.AFTER // not important post 1.21.9 either
@@ -415,7 +424,7 @@ public abstract class ChatScreenMixin extends Screen implements ChatScreenAccess
 	 */
 	/*? if <=1.21.8 {*/
 	/*@WrapOperation(method = "mouseClicked", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/EditBox;mouseClicked(DDI)Z"))
-	private boolean disableChatFieldFocus(EditBox chatField, double mX, double mY, int button, Operation<Boolean> mouseClicked) {
+	private boolean disableChatFieldFocus(EditBox chatField, MouseButtonEvent mouse, boolean bl, Operation<Boolean> mouseClicked) {
 		// return false (not clicked) if the search field is showing, otherwise delegate to input
 		return (!config.search || !showSearchBar) && mouseClicked.call(chatField, mX, mY, button);
 	}*/
@@ -436,7 +445,7 @@ public abstract class ChatScreenMixin extends Screen implements ChatScreenAccess
 			target =
 				/*? if >=1.21.11 {*/
 				/*~ if >=26.1 'Z' -> 'Lnet/minecraft/client/gui/components/ChatComponent$DisplayMode;' {*/
-				"Lnet/minecraft/client/gui/components/ChatComponent;captureClickableText(Lnet/minecraft/client/gui/ActiveTextCollector;IILnet/minecraft/client/gui/components/ChatComponent$DisplayMode;)V"
+				"Lnet/minecraft/client/gui/components/ChatComponent;captureClickableText(Lnet/minecraft/client/gui/ActiveTextCollector;IIZ)V"
 				//~}
 				/*?} else {*/
 				/*"Lnet/minecraft/client/gui/screens/ChatScreen;getComponentStyleAt(DD)Lnet/minecraft/network/chat/Style;"*/
@@ -446,7 +455,7 @@ public abstract class ChatScreenMixin extends Screen implements ChatScreenAccess
 	/*? if >=1.21.11 {*/
 	private void fixStyleClickthrough(
 		ChatComponent chat,
-		ActiveTextCollector styleFinder, int h, int ticks, /*? if >=26.1 {*/ChatComponent.DisplayMode/*?} else {*//*boolean*//*?}*/ focused,
+		ActiveTextCollector styleFinder, int h, int ticks, /*? if >=26.1 {*//*ChatComponent.DisplayMode*//*?} else {*/boolean/*?}*/ focused,
 		Operation<Void> captureClickableText, MouseButtonEvent mouse, boolean doubleClick
 	) {
 		if(!isMouseOverSettingsMenu(mouse.x(), mouse.y()) && !contextMenu.isMouseOver(mouse.x(), mouse.y())) {
@@ -470,7 +479,7 @@ public abstract class ChatScreenMixin extends Screen implements ChatScreenAccess
 	private boolean fixContextMenuNotClosing(MouseButtonEvent mouse, boolean bl, Operation<Boolean> mouseClicked) {
 		boolean clicked = mouseClicked.call(/*$ mouse_args {*/ mouse, bl/*$}*/);
 
-		if(/*? if >=1.21.9 {*/ mouse.button() /*?} else {*//*button*//*?}*/ != InputConstants.MOUSE_BUTTON_RIGHT) {
+		if(/*? if >=1.21.9 {*/ mouse.button() /*?} else {*//*button*//*?}*/ != GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
 			contextMenu.close(this::removeWidget); // closes the menu if it wasn't just created, we don't care if anything was actually clicked
 		}
 
@@ -526,7 +535,7 @@ public abstract class ChatScreenMixin extends Screen implements ChatScreenAccess
 		} else if(contextMenu.mouseClicked(/*$ mouse_args {*/ mouse, bl/*$}*/)) {
 			contextMenu.close(this::removeWidget);
 			cir.setReturnValue(true);
-		} else if(button == InputConstants.MOUSE_BUTTON_RIGHT) {
+		} else if(button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
 			ContextMenu newMenu = new ContextMenu((ChatScreen)(Object)this, mX, mY);
 			// if the mouse right-clicked elsewhere and that location can load a context menu, use it
 			if(newMenu.isFunctional()) {
@@ -604,7 +613,7 @@ public abstract class ChatScreenMixin extends Screen implements ChatScreenAccess
 
 		int cursor = input.getCursorPosition();
 		String prefix = input.getValue().substring(0, cursor);
-		List<String> history = minecraft.gui.hud.getChat().getRecentChat();
+		List<String> history = minecraft.gui.getChat().getRecentChat();
 
 		int newHistoryIndex = historyPos + offset;
 		int newOffset = 0;
@@ -691,7 +700,7 @@ public abstract class ChatScreenMixin extends Screen implements ChatScreenAccess
 			return; // prevent useless updates
 		}
 
-		ChatComponent chat = minecraft.gui.hud.getChat();
+		ChatComponent chat = minecraft.gui.getChat();
 		if(!text.isEmpty() || refresh) {
 			if(!text.isEmpty()) { // ensures the suggestion is kept when there is no query
 				searchField.setSuggestion(null);
@@ -719,7 +728,12 @@ public abstract class ChatScreenMixin extends Screen implements ChatScreenAccess
 				var copy = List.copyOf(messages);
 
 				messages.removeIf(Predicate.not(msg -> {
-					String m = ChatFormatting.stripFormatting(msg.content().getString());
+					// ★ D13/A2：只搜原文（含名字），不搜我们追加的译文行。
+					//   stock 直接搜 content().getString()，而译文是追加在同一条 Component 里的，
+					//   所以搜「挖矿」会命中「I'm going mining」那条 —— 用户要求搜索范围不含译文。
+					//   标记见 TextUtil.TRANSLATION_INSERTION。
+					String m = ChatFormatting.stripFormatting(
+							obro1961.chatpatches.util.TextUtil.withoutTranslation(msg.content()).getString());
 					return (config.regex)
 						? searchMatcher.reset(m).matches()
 						: (config.caseSensitive)
@@ -762,5 +776,28 @@ public abstract class ChatScreenMixin extends Screen implements ChatScreenAccess
 		}
 
 		searchDraft = text;
+	}
+
+
+	@Unique private int chatRight() {
+		var ch = this.minecraft.gui.getChat();
+		double s = ch.getScale();
+		if (s <= 0) {
+			return this.width;
+		}
+		return net.minecraft.util.Mth.floor(ch.getWidth() / s);
+	}
+
+
+	@Unique private int gearX() {
+		// 图3：齿轮在聊天区域右缘略向外，不是 chatRight() 内侧。
+		// 实测逻辑分辨率 screen=480x248，chatRight=320；目标左上约 x=332。
+		int x = this.width / 2 + obro1961.chatpatches.ChatPatches.config.gearOffsetX;
+		return Math.max(2, Math.min(this.width - GEAR - 2, x));
+	}
+	@Unique private int gearY() {
+		// 图3：齿轮位于聊天底部与搜索框之间，目标左上约 y=178（248高屏幕）。
+		int y = this.height / 2 - obro1961.chatpatches.ChatPatches.config.gearOffsetY;
+		return Math.max(2, Math.min(this.height - GEAR - 2, y));
 	}
 }

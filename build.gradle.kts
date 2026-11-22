@@ -7,7 +7,11 @@ import me.modmuss50.mpp.platforms.modrinth.ModrinthVersionRangeOptions
 
 plugins { // versions in gradle.properties + settings.gradle.kts
     kotlin("jvm")
-    alias(ft.plugins.mixin)
+    // ★ chatstudy 补丁：原来是 alias(ft.plugins.mixin)，依赖 settings.gradle.kts 里的 FT 版本目录。
+    // 但那个 catalog 插件会在 settings 上开依赖锁定，导致
+    // "Unable to load unique lockfile / settings-gradle.lockfile" 而构建根本起不来。
+    // 这个别名指向的就是下面这个插件，直接用 id + 版本即可，效果完全一样。
+    id("dev.kikugie.fletching-table.mixin") version "0.2.0-alpha.9"
     signing
     id("dev.isxander.mtk.manifests")
     id("me.modmuss50.mod-publish-plugin")

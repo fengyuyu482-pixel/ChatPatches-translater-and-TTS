@@ -3,7 +3,7 @@ package obro1961.chatpatches.gui;
 import com.google.common.collect.Iterables;
 import com.google.gson.JsonParseException;
 import com.mojang.authlib.GameProfile;
-import com.mojang.blaze3d.platform.InputConstants;
+import org.lwjgl.glfw.GLFW;
 import it.unimi.dsi.fastutil.ints.Int2ObjectFunction;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
@@ -11,7 +11,7 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectList;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.*;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -19,7 +19,7 @@ import net.minecraft.client.gui.layouts.GridLayout;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.PlayerInfo;
-import net.minecraft.client.multiplayer.chat.GuiMessage;
+import net.minecraft.client.GuiMessage;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.network.chat.*;
@@ -100,26 +100,30 @@ public class ContextMenu implements GuiEventListener {
 	// region [IDs]
 	static final Function<Object, Component> UNKNOWN = (id) -> translate("unknown", TextUtil.asText(id)).withStyle(ChatFormatting.RED);
 	static final Component MENU_STRING = translate("copyText");
-	static final Component RAW_TEXT = translate("rawText");
-	static final Component FORMATTED_STR = translate("formattedString");
-	static final Component NO_TIMESTAMP_TEXT = translate("noTimestampText");
-	static final Component NO_DUPE_TEXT = translate("noCounterText");
-	static final Component JSON_STR = translate("jsonString");
+	/** 「复制 → 译文」（D16：有译文才出现）。 */
+	static final Component TRANSLATION_TEXT = translate("translation");
 	static final Component MENU_TIME = translate("time");
-	static final Component TIMESTAMP = translate("timestampText");
+	static final Component TIMESTAMP = translate("timestampRaw");
 	static final Component TIMESTAMP_HOVER = translate("timestampHoverText");
 	static final Component FORMATTED_TIME = translate("formattedTime");
 	static final Component UNIX = translate("unix");
-	static final Component MENU_DUPE_COUNTER = translate("counter");
-	static final Component COUNTER_TEXT = translate("counterText");
-	static final Component COUNTER_VALUE = translate("counterValue");
-	static final Component MENU_LINKS = translate("links");
 	static final Int2ObjectFunction<Component> LINK_N = (n) -> translate("linkN", n);
-	static final Component MENU_SENDER = translate("sender");
-	static final Component NAME = translate("name");
-	static final Component UUID = translate("uuid");
 	static final Component MENU_REPLY = translate("reply");
 	static final Component MENU_DELETE = translate("delete");
+	// chatstudy: 朗读这条 / 停止朗读。
+	// 文案走 i18n（和整张菜单其它按钮同一个机制），图标走 registerActionButton 的 Item 参数 ——
+	// 所以标签里【不放 emoji】：别的按钮都没有，放了就不一致了。
+	static final Component MENU_READ_ALOUD = translate("readAloud");
+	static final Component MENU_STOP_READING = translate("stopReading");
+	/** R16 点击后翻译：手动翻这一条 */
+	static final Component MENU_TRANSLATE = translate("translateNow");
+	// ★ D16：菜单重做成 6 主项（+翻译=7）。复制只留 原文(JSON)/文本/译文/链接；时间三种格式。
+	static final Component MENU_COPY = translate("copy");
+	static final Component COPY_JSON = translate("copyJson");
+	static final Component COPY_TEXT_ONLY = translate("copyPlain");
+	static final Component DOT_TIME = translate("dotSeparated");
+	static final Component PING = translate("ping");
+	static final Component DM = translate("dm");
 	// endregion
 
 	/**
@@ -154,15 +158,25 @@ public class ContextMenu implements GuiEventListener {
 	/**
 	 * The index of the visible message in {@link ChatComponent#trimmedMessages}
 	 * that is also {@linkplain GuiMessage.Line#endOfEntry EoE}. Used
-	 * for simplifying and optimizing {@link #extractSelectionOutline(GuiGraphicsExtractor)}
+	 * for simplifying and optimizing {@link #renderSelectionOutline(GuiGraphics)}
 	 * and for calculating {@link #visibleLines}.
 	 */
 	private final int visibleMessageIndex;
 	/**
 	 * The number of visible lines in the selected message. Used for
-	 * simplifying and optimizing {@link #extractSelectionOutline(GuiGraphicsExtractor)}.
+	 * simplifying and optimizing {@link #renderSelectionOutline(GuiGraphics)}.
 	 */
 	private final int visibleLines;
+
+	/** 选中消息在 allMessages 里的下标（打开菜单时记下）。
+	 *  选中框每帧用它【重新算】位置 —— 行号会随新消息/滚动漂，下标不会（追加只在末尾）。 */
+	private final int messageIndex;
+	/** 当时是不是搜索模式（搜索结果的索引空间和 allMessages 不同，不能重算）。 */
+	private final boolean searchMode;
+	/** 选中消息"距末尾还有几条"：新消息插到头部时，下标会变、这个数不变。 */
+	private final int fromBottom;
+	/** 选中框诊断日志限流（1 秒一条，够定位又不刷屏）。 */
+	private static long lastOutlineLog = 0L;
 
 	/**
 	 * If true, effectively disables this context menu, meaning
@@ -194,7 +208,7 @@ public class ContextMenu implements GuiEventListener {
 		this.grid = new Grid();
 
 		// reference and optimization fields
-		this.chat = mc().gui.hud.getChat();
+		this.chat = mc().gui.getChat();
 		var access = (ChatComponentAccess) chat;
 		this.screen = noOp ? null : screen;
 
@@ -208,8 +222,25 @@ public class ContextMenu implements GuiEventListener {
 			noOp = true;
 		}
 
+		this.messageIndex = messageIndex;
+		this.fromBottom = (noOp || !searchResults.isEmpty()) ? -1
+				: Math.max(0, chat.allMessages.size() - 1 - messageIndex);
+		this.searchMode = !searchResults.isEmpty();
 		this.selectedLine = noOp ? NIL_HUD_LINE : Iterables.get(messages, messageIndex, NIL_HUD_LINE);
 		this.visibleMessageIndex = noOp ? -1 : message2Visible(messageIndex);
+
+		// chatstudy: 右键定位埋点 —— 出问题时能一眼看出「点的是哪条、算出来的是哪条」。
+		// 右键不常发生，一行 INFO 不刷屏；这行是「菜单和实际不同步」唯一的现场证据。
+		if(!noOp) {
+			String head = selectedLine.content().getString().replace('\n', ' ');
+			if(head.length() > 40) {
+				head = head.substring(0, 40) + "…";
+			}
+			obro1961.chatpatches.ChatPatches.LOGGER.info(
+				"[chatpatch] 右键定位: y={} 滚动位置={} 消息序号={} 内容=[{}]",
+				(int) mY, chat.chatScrollbarPos, messageIndex, head
+			);
+		}
 		this.visibleLines = noOp ? 0 : Util.make(() -> {
 			var visibles = chat.trimmedMessages;
 
@@ -272,19 +303,19 @@ public class ContextMenu implements GuiEventListener {
 				 * out comments; unfortunately, this is atrocious to do automatically.
 				 */
 				@Override //~ render_extraction
-				protected void /*? if >=1.21.11 {*/extractContents/*?} else {*//*extractWidget*//*?}*/(GuiGraphicsExtractor graphics, int mX, int mY, float delta) {
+				protected void /*? if >=1.21.11 {*/renderContents/*?} else {*//*renderWidget*//*?}*/(GuiGraphics graphics, int mX, int mY, float delta) {
 					/*? if >=1.21.11 {*/
 					// both lines pulled from Button.Plain
-					extractDefaultSprite(graphics);
-					extractDefaultLabel(graphics.textRendererForWidget(this, GuiGraphicsExtractor.HoveredTextEffects.NONE));
+					renderDefaultSprite(graphics);
+					renderDefaultLabel(graphics.textRendererForWidget(this, GuiGraphics.HoveredTextEffects.NONE));
 					/*?} else {*/
 					/*super.renderWidget(graphics, mX, mY, delta);*/
 					/*?}*/
 
 					if(icon instanceof Item item) {
-						graphics./*? if >=26.1 {*/fakeItem/*?} else {*//*renderFakeItem*//*?}*/(item.getDefaultInstance(), this.getX() + 1, this.getY() + 1);
+						graphics./*? if >=26.1 {*//*fakeItem*//*?} else {*/renderFakeItem/*?}*/(item.getDefaultInstance(), this.getX() + 1, this.getY() + 1);
 					} else if(icon instanceof /*? if >=1.20.2 {*/PlayerSkin/*?} else {*//*ResourceLocation*//*?}*/ playerSkin) {
-						/*? if >=26.1 {*/PlayerFaceExtractor.extractRenderState/*?} else {*//*PlayerFaceRenderer.draw*//*?}*/(graphics, playerSkin, this.getX() + 1, this.getY() + 1, 16);
+						/*? if >=26.1 {*//*PlayerFaceExtractor.renderRenderState*//*?} else {*/PlayerFaceRenderer.draw/*?}*/(graphics, playerSkin, this.getX() + 1, this.getY() + 1, 16);
 					}
 				}
 
@@ -337,7 +368,45 @@ public class ContextMenu implements GuiEventListener {
 	private void registerActionButton(Component id, Object icon, Button.OnPress pressAction) {
 		registerButton(id, 0, icon, null, pressAction);
 	}
+	/**
+	 * 注册一个<b>悬停才出现</b>的动作按钮（第 1 列）。
+	 *
+	 * <p>原来第 1 列只放"复制类"（copy），回复的 @名字 / /msg 是<b>填输入框</b>，
+	 * 不是复制 —— 需要这个口子，否则只能把它们塞进第 0 列，破掉 D16 的两级结构。
+	 */
+	private void registerHoverActionButton(Component id, Button.OnPress pressAction) {
+		registerButton(id, 1, null, null, pressAction);
+	}
 
+	/**
+	 * 时间戳 → 点分隔格式（{@code 19.19.16}），供"复制时间"的第二种格式用。
+	 *
+	 * <p>时间来自时间戳样式里的 insertion（毫秒），不是字符串切片 ——
+	 * 这样和其它两种格式（时间戳 / Unix）用的是<b>同一个时间源</b>，不会漂。
+	 */
+	/** 这条消息的"纯正文"：去时间戳、去名字、去我们追加的译文行。 */
+	private static String textOnly(Component originalText) {
+		if(originalText == null) {
+			return "";
+		}
+		String body = obro1961.chatpatches.pipeline.ChatStudyPipeline.stripTimestamp(
+			obro1961.chatpatches.pipeline.ChatStudyPipeline.plain(originalText.getString()));
+		var parsed = obro1961.chatpatches.pipeline.ChatStudyPipeline.parse(null, body);
+		String c = parsed.content();
+		return c == null ? "" : c.trim();
+	}
+
+	private static Component dotTime(String millisText) {
+		if(millisText == null || millisText.isEmpty()) {
+			return UNKNOWN.apply(DOT_TIME);
+		}
+		try {
+			long millis = Long.parseLong(millisText);
+			return Component.literal(new SimpleDateFormat("HH.mm.ss").format(new Date(millis)));
+		} catch(Exception e) {
+			return UNKNOWN.apply(DOT_TIME);
+		}
+	}
 	/**
 	 * Registers a button that gets its copy text from
 	 * a <b>supplier</b> and does <b>not</b> perform an
@@ -372,28 +441,13 @@ public class ContextMenu implements GuiEventListener {
 	 * method and registers all buttons with it. Does nothing
 	 * if the menu is {@linkplain #noOp disabled}.
 	 *
-	 * @implNote Registers buttons in the following order:
+	 * @implNote 注册顺序（= 显示顺序，D16）：
 	 * <ol>
-	 *     <li>{@link #MENU_STRING}</li>
-	 *     <li>{@link #RAW_TEXT}</li>
-	 *     <li>{@link #FORMATTED_STR}</li>
-	 *     <li>*{@link #NO_TIMESTAMP_TEXT}</li>
-	 *     <li>^{@link #NO_DUPE_TEXT}</li>
-	 *     <li>{@link #JSON_STR}</li>
-	 *     <li>If a timestamp is present*: {@link #MENU_TIME}</li>
-	 *     <li>*{@link #TIMESTAMP}</li>
-	 *     <li>*{@link #TIMESTAMP_HOVER}</li>
-	 *     <li>{@link #FORMATTED_TIME}</li>
-	 *     <li>{@link #UNIX}</li>
-	 *     <li>If a dupe counter is present^: ^{@link #MENU_DUPE_COUNTER}</li>
-	 *     <li>^{@link #COUNTER_TEXT}</li>
-	 *     <li>^{@link #COUNTER_VALUE}</li>
-	 *     <li>If any web or file links are present**: **{@link #MENU_LINKS}</li>
-	 *     <li>**{@link #LINK_N} (for each link)</li>
-	 *     <li>If the message sender is a player^^: ^^{@link #MENU_SENDER}</li>
-	 *     <li>^^{@link #NAME}</li>
-	 *     <li>^^{@link #UUID}</li>
-	 *     <li>^^{@link #MENU_REPLY}</li>
+	 *     <li>{@link #MENU_COPY} ▸ 原文(JSON) / 文本 / 译文(有才出现) / 链接(有才出现)</li>
+	 *     <li>{@link #MENU_TIME} ▸ 时间戳 / 点分隔 / Unix</li>
+	 *     <li>{@link #MENU_REPLY} ▸ @名字 / /msg（有发送者或能从正文解析出名字才出现）</li>
+	 *     <li>{@link #MENU_TRANSLATE}（R16）</li>
+	 *     <li>{@link #MENU_READ_ALOUD} / {@link #MENU_STOP_READING}</li>
 	 *     <li>{@link #MENU_DELETE}</li>
 	 * </ol>
 	 * Finally, updates and syncs the button positions and registers them
@@ -405,74 +459,22 @@ public class ContextMenu implements GuiEventListener {
 		if(noOp) return;
 
 		Component text = selectedLine.content();
-		Component timestamp = getPart(text, TIMESTAMP_INDEX);
+		// ★ D13/A2：复制的是【原文】。我们追加的译文行带 insertion 标记，这里先剔掉：
+		//   「原文（JSON）」必须是 100% 可还原的原文，里面混一行 ↳ 译文就不叫原文了；
+		//   「文本」同理（D16：复制项不带译文）。时间戳/去重计数的下标不受影响 ——
+		//   译文行永远追加在最后。
+		Component originalText = TextUtil.withoutTranslation(text);
+		Component timestamp = getPart(originalText, TIMESTAMP_INDEX);
 		boolean timestamped = !timestamp.getString().isBlank();
-		Component counter = getPart(text, DUPE_INDEX);
-		boolean duped = text.getSiblings().size() > DUPE_INDEX && !counter.getString().isEmpty();
 
 
-		// string buttons - unconditional
-		registerProxyButton(MENU_STRING, RAW_TEXT, Items.OAK_SIGN);
-			registerCopyButton(RAW_TEXT, text); // 0
-			registerCopyButton(FORMATTED_STR, literal(TextUtil.toLegacyString(text, true))); // 1
-			if(timestamped) {
-				registerCopyButton(NO_TIMESTAMP_TEXT, TextUtil.newSiblings(text, text.getSiblings().subList(MESSAGE_INDEX, text.getSiblings().size()))); // 2
-			}
-			if(duped) {
-				registerCopyButton(NO_DUPE_TEXT, TextUtil.newSiblings(text, text.getSiblings().subList(TIMESTAMP_INDEX, DUPE_INDEX))); // timestamped ? 3 : 2
-			}
-			registerCopyButton(JSON_STR,
-				TextUtil.UNSAFE_CODEC.encodeStart(VersionUtil.addSerializationContext(NbtOps.INSTANCE), text)
-					.resultOrPartial(e -> logReportMsg(new JsonParseException(e)))
-					.map(NbtUtils::toPrettyComponent)
-					.orElse(UNKNOWN.apply(JSON_STR))
-			); // (timestamped && duped) ? 4 : (timestamped || duped) ? 3 : 2
-			// todo: OG_JSON_STR - json of the original message w/o CPS mods - some sort of check should determine if we can just use the time/dupe-stripped text or if reconstruction is needed
+		// ================= ★ D16 菜单重做（2026-10-20）=================
+		// 主项：复制 / 时间 / 翻译这条 / 朗读 / 停止 / 删除 / 回复
+		// 复制只留：原文(JSON) / 文本 / 译文(有才出现) / 链接(有才出现)
+		// 时间三种：时间戳 / 点分隔 / Unix；回复两种：@名字 / /msg
+		// 去掉的项：重复计数、发送者子项、无时间戳/无计数器/格式化变体（D16）
 
-		// time buttons - some unconditional
-		registerProxyButton(MENU_TIME, timestamped ? TIMESTAMP : FORMATTED_TIME, Items.CLOCK);
-			// timestamp buttons - conditional (if they exist)
-			if(timestamped) {
-				registerCopyButton(TIMESTAMP, timestamp);
-
-				// registers TIMESTAMP_HOVER if the timestamp has hover text in its style
-				HoverEvent event = timestamp.getStyle().getHoverEvent();
-				Optional<Component> optional =
-					//? if >=1.21.5 {
-					event instanceof HoverEvent.ShowText(Component value)
-						? Optional.of(value)
-					//?} else {
-					/*event != null
-						? Optional.of(event.getValue(HoverEvent.Action.SHOW_TEXT))*/
-					/*?}*/
-						: Optional.empty();
-				optional.ifPresent(hoverText -> registerCopyButton(TIMESTAMP_HOVER, hoverText));
-			}
-
-			String unix = timestamp.getStyle().getInsertion();
-			registerCopyButton(FORMATTED_TIME, 1, null, () -> {
-				if(unix != null && !unix.isEmpty() && config.contextTimeFormat != null && !config.contextTimeFormat.isBlank()) {
-					try {
-						long millis = Long.parseLong(unix);
-						return Component.literal(new SimpleDateFormat(config.contextTimeFormat).format(new Date(millis)));
-					} catch(Exception e) {
-						logReportMsg(e);
-					}
-				}
-				return UNKNOWN.apply(FORMATTED_TIME);
-			});
-			registerCopyButton(UNIX, 1, null, () ->
-				unix != null && !unix.isEmpty() ? Component.literal(unix) : UNKNOWN.apply(UNIX)
-			);
-
-		// dupe counter buttons - conditional
-		if(duped) {
-			registerProxyButton(MENU_DUPE_COUNTER, COUNTER_TEXT, Items.MAP);
-				registerCopyButton(COUNTER_TEXT, counter);
-				registerCopyButton(COUNTER_VALUE, literal(counter.getString().replaceAll("(§\\d)|\\D", "").trim()));
-		}
-
-		// link buttons - conditional
+		// 链接先算好 —— 复制子菜单里要用（原来是独立主项）
 		ObjectList<String> webLinks = Util.make(new ObjectArrayList<>(), l -> {
 			Matcher matcher = URL_PATTERN.get().matcher(text.getString());
 			while(matcher.find()) {
@@ -504,46 +506,127 @@ public class ContextMenu implements GuiEventListener {
 				*///?}
 				return Optional.empty();
 			}, Style.EMPTY));
-		if(!webLinks.isEmpty() || !filePaths.isEmpty()) {
-			registerProxyButton(MENU_LINKS, LINK_N.apply(1), Items./*? if >=1.21.9 {*/IRON_CHAIN/*?} else {*//*CHAIN*//*?}*/);
-
-			int l = 0; // link index
-			for(; l < filePaths.size(); l++) {
-				registerCopyButton(LINK_N.apply(l + 1), literal(ChatFormatting.GOLD + "" + ChatFormatting.UNDERLINE + filePaths.get(l)));
-			}
-
-			int filePathOffset = l; // ensures we're not trying to access out-of-bounds indices bc these are separate lists
-			for(; l - filePathOffset < webLinks.size(); l++) {
-				registerCopyButton(LINK_N.apply(l + 1), literal(ChatFormatting.BLUE + "" + ChatFormatting.UNDERLINE + webLinks.get(l - filePathOffset)));
-			}
-		}
-
-		// sender buttons - conditional
+		// ---- 头像 ----：玩家消息用皮肤；非玩家（Discord 转播等）用命名牌图标
+		// 名字来源：① 消息自带 GameProfile ② 从正文抠（服务器/转播消息常见）
+		String senderName = null;
 		if( !NIL_SENDER.equals(messageSender) ) {
-			var name = messageSender./*? if >=1.21.9 {*/name/*?} else {*//*getName*//*?}*/();
-			var id = messageSender./*? if >=1.21.9 {*/id/*?} else {*//*getId*//*?}*/();
-
-			registerProxyButton(MENU_SENDER, NAME, Items.NAME_TAG);
-				registerCopyButton(NAME, literal(name));
-				registerCopyButton(UUID, literal(id.toString()));
-
-			registerActionButton(
-				MENU_REPLY,
-				(Object)mc().getConnection().getPlayerInfo(id) instanceof PlayerInfo info ? info./*? if >=1.20.2 {*/getSkin/*?} else {*//*getSkinLocation*//*?}*/() : null, // prefer real skin; else nothing
-				me -> screen.input.setValue(TextUtil.fillVars(config.contextReplyFormat, name))
-			);
+			senderName = messageSender./*? if >=1.21.9 {*/name/*?} else {*//*getName*//*?}*/();
+		}
+		if(senderName == null || senderName.isBlank()) {
+			String rawBody = obro1961.chatpatches.pipeline.ChatStudyPipeline.stripTimestamp(
+				obro1961.chatpatches.pipeline.ChatStudyPipeline.plain(text.getString()));
+			int rawCut = rawBody.indexOf('\n');
+			if(rawCut >= 0) {
+				rawBody = rawBody.substring(0, rawCut);
+			}
+			var rawParsed = obro1961.chatpatches.pipeline.ChatStudyPipeline.parse(null, rawBody);
+			senderName = rawParsed.speaker() == null ? null : rawParsed.speaker().trim();
+		}
+		Object avatarIcon = Items.NAME_TAG;
+		if( !NIL_SENDER.equals(messageSender) ) {
+			var senderId = messageSender./*? if >=1.21.9 {*/id/*?} else {*//*getId*//*?}*/();
+			if(mc().getConnection() != null && mc().getConnection().getPlayerInfo(senderId) instanceof PlayerInfo info) {
+				avatarIcon = info./*? if >=1.20.2 {*/getSkin/*?} else {*//*getSkinLocation*//*?}*/();
+			}
+		}
+		if(Items.NAME_TAG.equals(avatarIcon) && senderName != null && !senderName.isBlank() && mc().getConnection() != null) {
+			Object byName = skinByName(senderName);
+			if(byName != null) {
+				avatarIcon = byName;
+			}
 		}
 
+
+
+		// ---- 1. 复制 ▸ ----（文本在前，原文（JSON）在后；一级默认 = 原文（JSON））
+		// 一级「复制」默认 = 文本（纯正文），要原文 JSON 走二级菜单
+		registerProxyButton(MENU_COPY, COPY_TEXT_ONLY, Items.OAK_SIGN);
+			// 文本 = 只有正文（时间戳、名字、译文行全去掉）
+			registerCopyButton(COPY_TEXT_ONLY, literal(textOnly(originalText)));
+			registerCopyButton(COPY_JSON,
+				TextUtil.UNSAFE_CODEC.encodeStart(VersionUtil.addSerializationContext(NbtOps.INSTANCE), originalText)
+					.resultOrPartial(e -> logReportMsg(new JsonParseException(e)))
+					.map(NbtUtils::toPrettyComponent)
+					.orElse(UNKNOWN.apply(COPY_JSON))
+			);
+			String tr = TextUtil.translationOf(text);
+			if(tr != null) {
+				registerCopyButton(TRANSLATION_TEXT, literal(tr));
+			}
+			int linkIndex = 0;
+			for(; linkIndex < filePaths.size(); linkIndex++) {
+				registerCopyButton(LINK_N.apply(linkIndex + 1), literal(ChatFormatting.GOLD + "" + ChatFormatting.UNDERLINE + filePaths.get(linkIndex)));
+			}
+			int filePathOffset = linkIndex;
+			for(; linkIndex - filePathOffset < webLinks.size(); linkIndex++) {
+				registerCopyButton(LINK_N.apply(linkIndex + 1), literal(ChatFormatting.BLUE + "" + ChatFormatting.UNDERLINE + webLinks.get(linkIndex - filePathOffset)));
+			}
+
+		// ---- 2. 时间 ▸ ----
+		registerProxyButton(MENU_TIME, timestamped ? TIMESTAMP : DOT_TIME, Items.CLOCK);
+			if(timestamped) {
+				registerCopyButton(TIMESTAMP, timestamp);
+			}
+			String unix = timestamp.getStyle().getInsertion();
+			registerCopyButton(DOT_TIME, 1, null, () -> dotTime(unix));
+			registerCopyButton(UNIX, 1, null, () ->
+				unix != null && !unix.isEmpty() ? Component.literal(unix) : UNKNOWN.apply(UNIX)
+			);
+
+		// ---- 3. 回复 ▸（@名字 / /msg 名字）----
+		// 名字：优先用上面解析出的发送者；拿不到（MIA 的 system / Discord 转播）就从正文抠。
+		// 图标沿用同一份 avatarIcon：玩家=皮肤，非玩家=命名牌。
+		String replyName = senderName;
+		Object replyIcon = avatarIcon;
+		if(replyName == null || replyName.isBlank()) {
+			String body = obro1961.chatpatches.pipeline.ChatStudyPipeline.stripTimestamp(
+				obro1961.chatpatches.pipeline.ChatStudyPipeline.plain(text.getString()));
+			int cut = body.indexOf('\n');
+			if(cut >= 0) {
+				body = body.substring(0, cut);
+			}
+			var parsed = obro1961.chatpatches.pipeline.ChatStudyPipeline.parse(null, body);
+			replyName = parsed.speaker() == null ? null : parsed.speaker().trim();
+		}
+		if(replyName != null && !replyName.isBlank()) {
+			final String who = replyName;
+			// 私聊在前、@ 在后；一级默认 = 私聊（DM）
+			registerProxyButton(MENU_REPLY, DM, replyIcon);
+				registerHoverActionButton(DM, me -> screen.input.setValue(TextUtil.fillVars(config.contextReplyFormat, who)));
+				registerHoverActionButton(PING, me -> screen.input.setValue("@" + who + " "));
+		}
+		// ---- 4. 翻译这条（R16）----
+		registerActionButton(MENU_TRANSLATE, Items.WRITABLE_BOOK, me ->
+			obro1961.chatpatches.chatstudy.ChatStudyBridge.translateNow(text));
+
+		// ---- 5. 朗读 / 停止 ----
+		// 传【整串原文】，清洗交给 menuSpeech（切时间戳/译文行/颜色码/图标）
+		registerActionButton(MENU_READ_ALOUD, Items.BELL, me ->
+			obro1961.chatpatches.chatstudy.ChatStudyBridge.speakNow(text.getString()));
+		registerActionButton(MENU_STOP_READING, Items.BARRIER, me ->
+			obro1961.chatpatches.chatstudy.ChatStudyBridge.stopSpeaking());
+
+		// ---- 6. 删除（二次确认 + 连带译文 + 写 delete{targetSeq}）----
 		registerActionButton(MENU_DELETE, Items.BARRIER, me -> {
 			if(config.contextDeletionWarning) {
-				mc().gui.setScreen(new DeletionWarningScreen(screen, selectedLine));
+				mc().setScreen(new DeletionWarningScreen(screen, selectedLine));
 			} else {
+				obro1961.chatpatches.chatstudy.ChatStudyBridge.noteDeletion(originalText);
 				deleteMessage(selectedLine, config.contextDeletionSizzle);
 			}
 		});
 
 		grid.updateButtonMetadata();
 		grid.buttons().forEach(addSelectableChild);
+		// ★ 2026-10-21 诊断：把这次真正注册出来的按钮按顺序打出来。
+		//   作用：一眼看出"菜单是新的还是旧的"，不用靠截图猜。
+		if(!noOp) {
+			java.util.List<String> labels = new java.util.ArrayList<>();
+			for(var b : grid.buttons()) {
+				labels.add(b.getMessage().getString());
+			}
+			obro1961.chatpatches.ChatPatches.LOGGER.info("[chatpatch] 右键菜单已注册 {} 个按钮（按顺序）: {}", labels.size(), labels);
+		}
 	}
 
 	/**
@@ -551,36 +634,80 @@ public class ContextMenu implements GuiEventListener {
 	 * {@link #clickPos} and highlights its selected message
 	 * in chat.
 	 *
-	 * @see #extractSelectionOutline(GuiGraphicsExtractor)
-	 * @see #extractMenuButtons(GuiGraphicsExtractor, int, int, float)
+	 * @see #renderSelectionOutline(GuiGraphics)
+	 * @see #renderMenuButtons(GuiGraphics, int, int, float)
 	 *
-	 * @see ChatScreenMixin#renderCustomWidgets(GuiGraphicsExtractor, int, int, float, CallbackInfo)
+	 * @see ChatScreenMixin#renderCustomWidgets(GuiGraphics, int, int, float, CallbackInfo)
 	 */
-	public void extractRenderState(GuiGraphicsExtractor graphics, int mX, int mY, float delta) {
+	public void render(GuiGraphics graphics, int mX, int mY, float delta) {
 		if(noOp) {
 			return;
 		}
 
-		extractSelectionOutline(graphics/*, mX, mY, delta*/);
-		extractMenuButtons(graphics, mX, mY, delta);
+		renderSelectionOutline(graphics/*, mX, mY, delta*/);
+		renderMenuButtons(graphics, mX, mY, delta);
 	}
 
 	/**
 	 * Renders a selection outline around the hovered message lines
 	 * in the chat, to indicate which message will be copied.
 	 */
-	private void extractSelectionOutline(GuiGraphicsExtractor graphics/*, int mX, int mY, float delta*/) {
+	private void renderSelectionOutline(GuiGraphics graphics/*, int mX, int mY, float delta*/) {
 		if(visibleLines == 0 || visibleMessageIndex == -1) {
 			return;
 		}
 
-		int hoveredParts = visibleLines;
+		// ★ 选中框位置【每帧重算】，不用打开菜单时缓存的行号。
+		//   原因（用户实测）：复制出来的内容是对的，但箭头框歪了 —— 因为新消息进来 / 滚动 /
+		//   我们给消息追加译文行，都会让"第几行"和真实渲染位置脱钩。
+		//   这里改成按【消息下标】重新算 EoE 位置和它占几行，所以滚屏/插行都不再漂。
+		// ★ 新消息会插到 allMessages 的【头部】，导致记下的下标指向别人 ——
+		//   实测现象：来一条新消息，框就往上偏一格（动作结果还是对的，因为动作认的是对象）。
+		//   这里每帧重新定位：先按对象找；对象被我们替换过（追加译文）就退回"距末尾几条"。
+		int liveIndex = messageIndex;
+		if(!searchMode) {
+			liveIndex = -1;
+			var all = chat.allMessages;
+			for(int k = 0; k < all.size(); k++) {
+				if(all.get(k) == selectedLine) {
+					liveIndex = k;
+					break;
+				}
+			}
+			if(liveIndex < 0 && fromBottom >= 0) {
+				liveIndex = Math.max(0, all.size() - 1 - fromBottom);
+			}
+			if(liveIndex < 0) {
+				return;
+			}
+		}
+		int eoe = searchMode ? visibleMessageIndex : obro1961.chatpatches.util.ChatUtil.message2Visible(liveIndex);
+		if(eoe < 0) {
+			return;
+		}
+		// ★ 行数要【往后数】。原来我往前走，结果只算到 1 行 —— 实测现象就是：
+		//   两行消息（原文 + 译文）只圈住下面那行，上面那行没圈到。
+		//   EoE 标在"这条消息的起点行"，同一条消息的其余行跟在它后面，直到下一个 EoE。
+		var vis = chat.trimmedMessages;
+		int hoveredParts = 1;
+		while(eoe + hoveredParts < vis.size() && !vis.get(eoe + hoveredParts).endOfEntry()) {
+			hoveredParts++;
+		}
+		if(searchMode) {
+			hoveredParts = visibleLines;
+		}
 		double s = chat.getScale();
 		int lH = chat.getLineHeight();
 		int sW = Mth.ceil(chat.getWidth() / s); // scaled width
 		int sH = Mth.floor((mc().getWindow().getGuiScaledHeight() - ChatComponent.BOTTOM_MARGIN) / s); // scaled height
 		int shift = Mth.floor(config.calcDynamicChatShift() / s);
-		int i = visibleMessageIndex - chat.chatScrollbarPos;
+		int i = eoe - chat.chatScrollbarPos;
+		if(System.currentTimeMillis() - lastOutlineLog > 1000L) {
+			lastOutlineLog = System.currentTimeMillis();
+			obro1961.chatpatches.ChatPatches.LOGGER.info(
+				"[chatpatch] 选中框: liveIdx={} eoe={} lines={} scroll={} i={}",
+				liveIndex, eoe, hoveredParts, chat.chatScrollbarPos, i);
+		}
 		int hoveredY = sH - (i * lH) - shift;
 
 		graphics.pose().pushMatrix();
@@ -594,14 +721,14 @@ public class ContextMenu implements GuiEventListener {
 
 		// cuts off any of the selection rect that goes past the chat hud
 		graphics.enableScissor(0, scissorY1, borderW, scissorY2);
-		graphics./*? if >=26.1 {*/outline/*?} else {*//*renderOutline*//*?}*/(0, selectionY1, borderW, selectionH, RenderUtil.opaque(config.contextOutlineColor));
+		graphics./*? if >=26.1 {*//*outline*//*?} else {*/renderOutline/*?}*/(0, selectionY1, borderW, selectionH, RenderUtil.opaque(config.contextOutlineColor));
 		graphics.disableScissor();
 
 		graphics.pose().popMatrix();
 	}
 
-	private void extractMenuButtons(GuiGraphicsExtractor graphics, int mX, int mY, float delta) {
-		grid.buttons().forEach(w -> w.extractRenderState(graphics, mX, mY, delta));
+	private void renderMenuButtons(GuiGraphics graphics, int mX, int mY, float delta) {
+		grid.buttons().forEach(w -> w.render(graphics, mX, mY, delta));
 	}
 	/*~ !render_extraction*/
 
@@ -626,7 +753,7 @@ public class ContextMenu implements GuiEventListener {
 		}
 
 		GuiEventListener focused = screen.getFocused();
-		if(/*? if >=1.21.9 {*/ key.key() /*?} else {*//*keyCode*//*?}*/ == InputConstants.KEY_TAB) {
+		if(/*? if >=1.21.9 {*/ key.key() /*?} else {*//*keyCode*//*?}*/ == GLFW.GLFW_KEY_TAB) {
 			if(focused instanceof AbstractButton tabbed && grid.contains(tabbed)) {
 				updateButtons(Optional.of(tabbed));
 				return true; // true - extra KeyCodes.isToggle check does NOT pass
@@ -653,7 +780,7 @@ public class ContextMenu implements GuiEventListener {
 		int button = mouse.button();
 		//?}
 
-		if(!noOp && button == InputConstants.MOUSE_BUTTON_LEFT) {
+		if(!noOp && button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
 			Optional<AbstractButton> opt = getHoveredButton(mX, mY);
 			// whether the button at (mX, mY) was clicked or not, otherwise return false and close the menu
 			return opt.isPresent() && opt.get().mouseClicked(/*$ mouse_args {*/ mouse, bl/*$}*/);
@@ -952,7 +1079,7 @@ public class ContextMenu implements GuiEventListener {
 		@SuppressWarnings("unchecked")
 		public List<AbstractButton> buttons() {
 			try {
-				return (List<AbstractButton>) (Object) layout.children/*? if >=26.1 {*/.stream().map(wrapper -> wrapper.child).toList()/*?}*/;
+				return (List<AbstractButton>) (Object) layout.children/*? if >=26.1 {*//*.stream().map(wrapper -> wrapper.child).toList()*//*?}*/;
 			} catch(ClassCastException e) {
 				logReportMsg(e);
 				return ObjectList.of();
@@ -1022,5 +1149,20 @@ public class ContextMenu implements GuiEventListener {
 				return button.getMessage();
 			}
 		}
+	}
+
+	/** 按玩家名字在在线列表里找皮肤；找不到返回 null（调用方回退命名牌）。 */
+	private Object skinByName(String name) {
+		if(name == null || name.isBlank() || mc().level == null) {
+			return null;
+		}
+		for(var pl : mc().level.players()) {
+			if(pl.getGameProfile()./*? if >=1.21.9 {*/name/*?} else {*//*getName*//*?}*/().equalsIgnoreCase(name.trim())) {
+				if(mc().getConnection() != null && mc().getConnection().getPlayerInfo(pl.getUUID()) instanceof PlayerInfo info) {
+					return info./*? if >=1.20.2 {*/getSkin/*?} else {*//*getSkinLocation*//*?}*/();
+				}
+			}
+		}
+		return null;
 	}
 }

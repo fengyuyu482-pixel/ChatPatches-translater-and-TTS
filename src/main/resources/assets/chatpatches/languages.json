@@ -1,0 +1,2234 @@
+{
+  "version": 2,
+  "note": "MC locale 与 franc 的交集，按使用人口三级分层",
+  "tiers": {
+    "T1": {
+      "label": "常用",
+      "minPopulationM": 44,
+      "defaultEnabled": true
+    },
+    "T2": {
+      "label": "次常用",
+      "minPopulationM": 8,
+      "defaultEnabled": false
+    },
+    "T3": {
+      "label": "其他",
+      "minPopulationM": 0,
+      "defaultEnabled": false
+    }
+  },
+  "providers": {
+    "deepseek": {
+      "type": "openai",
+      "langField": "promptName",
+      "note": "用英文语言名，实测中文名会被当\"翻成中文\""
+    },
+    "hunyuan_local": {
+      "type": "openai",
+      "langField": "promptName",
+      "note": "同上；本地模型对英文名同样更稳"
+    },
+    "bilibili": {
+      "type": "openai",
+      "langField": "promptName",
+      "note": "Index-Translate，OpenAI 兼容"
+    },
+    "mymemory": {
+      "type": "get",
+      "langField": "providers.mymemory",
+      "note": "langpair=源|目标，需 ISO 639-1 带地区"
+    }
+  },
+  "languages": [
+    {
+      "id": "cmn",
+      "nameZh": "中文",
+      "script": "cmn",
+      "populationM": 885,
+      "tier": "T1",
+      "mcLocales": [
+        "lzh",
+        "zh_cn",
+        "zh_hk",
+        "zh_tw"
+      ],
+      "providers": {
+        "hunyuan": true,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "zh-CN"
+      },
+      "promptName": "Mandarin Chinese",
+      "mcPrimaryLocale": "zh_cn",
+      "display": "简体中文",
+      "displayRegion": "中国大陆",
+      "localeNames": {
+        "lzh": "文言",
+        "zh_cn": "简体中文",
+        "zh_hk": "繁體中文",
+        "zh_tw": "繁體中文"
+      }
+    },
+    {
+      "id": "spa",
+      "nameZh": "西班牙语",
+      "script": "Latin",
+      "populationM": 332,
+      "tier": "T1",
+      "mcLocales": [
+        "es_ar",
+        "es_cl",
+        "es_ec",
+        "es_es",
+        "es_mx",
+        "es_uy",
+        "es_ve",
+        "esan"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "es-ES"
+      },
+      "promptName": "Spanish",
+      "mcPrimaryLocale": "es_es",
+      "display": "Español",
+      "displayRegion": "España",
+      "localeNames": {
+        "es_ar": "Español",
+        "es_cl": "Español",
+        "es_ec": "Español",
+        "es_es": "Español",
+        "es_mx": "Español",
+        "es_uy": "Español",
+        "es_ve": "Español",
+        "esan": "Andalûh"
+      }
+    },
+    {
+      "id": "eng",
+      "nameZh": "英语",
+      "script": "Latin",
+      "populationM": 322,
+      "tier": "T1",
+      "mcLocales": [
+        "en_au",
+        "en_ca",
+        "en_gb",
+        "en_nz",
+        "en_pt",
+        "en_ud",
+        "enp",
+        "enws",
+        "en_us"
+      ],
+      "providers": {
+        "hunyuan": true,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "en-GB"
+      },
+      "promptName": "English",
+      "mcPrimaryLocale": "en_gb",
+      "display": "English",
+      "displayRegion": "United Kingdom",
+      "localeNames": {
+        "en_au": "English",
+        "en_ca": "English",
+        "en_gb": "English",
+        "en_nz": "English",
+        "en_pt": "Pirate Speak",
+        "en_ud": "ɥsᴉꞁᵷuƎ",
+        "enp": "Anglish",
+        "enws": "Shakespearean English",
+        "en_us": "English (US)"
+      }
+    },
+    {
+      "id": "rus",
+      "nameZh": "俄语",
+      "script": "Cyrillic",
+      "populationM": 288,
+      "tier": "T1",
+      "mcLocales": [
+        "rpr",
+        "ru_ru"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "ru-RU"
+      },
+      "promptName": "Russian",
+      "mcPrimaryLocale": "ru_ru",
+      "display": "Русский",
+      "displayRegion": "Россия",
+      "localeNames": {
+        "rpr": "Русскій дореформенный",
+        "ru_ru": "Русский"
+      }
+    },
+    {
+      "id": "arb",
+      "nameZh": "阿拉伯语",
+      "script": "Arabic",
+      "populationM": 280,
+      "tier": "T1",
+      "mcLocales": [
+        "ar_sa"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "ar-SA"
+      },
+      "promptName": "Standard Arabic",
+      "mcPrimaryLocale": "ar_sa",
+      "display": "العربية",
+      "displayRegion": "العالم العربي",
+      "localeNames": {
+        "ar_sa": "العربية"
+      }
+    },
+    {
+      "id": "hin",
+      "nameZh": "印地语",
+      "script": "Devanagari",
+      "populationM": 182,
+      "tier": "T1",
+      "mcLocales": [
+        "hi_in"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "hi-IN"
+      },
+      "promptName": "Hindi",
+      "mcPrimaryLocale": "hi_in",
+      "display": "हिंदी",
+      "displayRegion": "भारत",
+      "localeNames": {
+        "hi_in": "हिंदी"
+      }
+    },
+    {
+      "id": "por",
+      "nameZh": "葡萄牙语",
+      "script": "Latin",
+      "populationM": 182,
+      "tier": "T1",
+      "mcLocales": [
+        "pt_br",
+        "pt_pt"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "pt-BR"
+      },
+      "promptName": "Portuguese",
+      "mcPrimaryLocale": "pt_br",
+      "display": "Português",
+      "displayRegion": "Brasil",
+      "localeNames": {
+        "pt_br": "Português",
+        "pt_pt": "Português"
+      }
+    },
+    {
+      "id": "ind",
+      "nameZh": "印尼语",
+      "script": "Latin",
+      "populationM": 140,
+      "tier": "T1",
+      "mcLocales": [
+        "id_id"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "id-ID"
+      },
+      "promptName": "Indonesian",
+      "mcPrimaryLocale": "id_id",
+      "display": "Bahasa Indonesia",
+      "displayRegion": "Indonesia",
+      "localeNames": {
+        "id_id": "Bahasa Indonesia"
+      }
+    },
+    {
+      "id": "jpn",
+      "nameZh": "日语",
+      "script": "jpn",
+      "populationM": 125,
+      "tier": "T1",
+      "mcLocales": [
+        "ja_jp"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "ja-JP"
+      },
+      "promptName": "Japanese",
+      "mcPrimaryLocale": "ja_jp",
+      "display": "日本語",
+      "displayRegion": "日本",
+      "localeNames": {
+        "ja_jp": "日本語"
+      }
+    },
+    {
+      "id": "fra",
+      "nameZh": "法语",
+      "script": "Latin",
+      "populationM": 124,
+      "tier": "T1",
+      "mcLocales": [
+        "fr_ca",
+        "fr_ch",
+        "fr_fr"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "fr-FR"
+      },
+      "promptName": "French",
+      "mcPrimaryLocale": "fr_fr",
+      "display": "Français",
+      "displayRegion": "France",
+      "localeNames": {
+        "fr_ca": "Français",
+        "fr_ch": "Français",
+        "fr_fr": "Français"
+      }
+    },
+    {
+      "id": "deu",
+      "nameZh": "德语",
+      "script": "Latin",
+      "populationM": 121,
+      "tier": "T1",
+      "mcLocales": [
+        "bar",
+        "de_at",
+        "de_ch",
+        "de_de",
+        "ksh",
+        "sxu"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "de-DE"
+      },
+      "promptName": "German",
+      "mcPrimaryLocale": "de_de",
+      "display": "Deutsch",
+      "displayRegion": "Deutschland",
+      "localeNames": {
+        "bar": "Boarisch",
+        "de_at": "Deitsch",
+        "de_ch": "Schwiizerdütsch",
+        "de_de": "Deutsch",
+        "ksh": "Kölsch/Ripoarisch",
+        "sxu": "Säggs’sch"
+      }
+    },
+    {
+      "id": "kor",
+      "nameZh": "韩语",
+      "script": "kor",
+      "populationM": 75,
+      "tier": "T1",
+      "mcLocales": [
+        "ko_kr"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "ko-KR"
+      },
+      "promptName": "Korean",
+      "mcPrimaryLocale": "ko_kr",
+      "display": "한국어",
+      "displayRegion": "대한민국",
+      "localeNames": {
+        "ko_kr": "한국어"
+      }
+    },
+    {
+      "id": "vie",
+      "nameZh": "越南语",
+      "script": "Latin",
+      "populationM": 67,
+      "tier": "T1",
+      "mcLocales": [
+        "vi_vn"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "vi-VN"
+      },
+      "promptName": "Vietnamese",
+      "mcPrimaryLocale": "vi_vn",
+      "display": "Tiếng Việt",
+      "displayRegion": "Việt Nam",
+      "localeNames": {
+        "vi_vn": "Tiếng Việt"
+      }
+    },
+    {
+      "id": "ita",
+      "nameZh": "意大利语",
+      "script": "Latin",
+      "populationM": 63,
+      "tier": "T1",
+      "mcLocales": [
+        "it_it",
+        "lmo"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "it-IT"
+      },
+      "promptName": "Italian",
+      "mcPrimaryLocale": "it_it",
+      "display": "Italiano",
+      "displayRegion": "Italia",
+      "localeNames": {
+        "it_it": "Italiano",
+        "lmo": "Lombard"
+      }
+    },
+    {
+      "id": "tam",
+      "nameZh": "泰米尔语",
+      "script": "tam",
+      "populationM": 62,
+      "tier": "T1",
+      "mcLocales": [
+        "ta_in"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "ta-IN"
+      },
+      "promptName": "Tamil",
+      "mcPrimaryLocale": "ta_in",
+      "display": "தமிழ்",
+      "displayRegion": "இந்தியா",
+      "localeNames": {
+        "ta_in": "தமிழ்"
+      }
+    },
+    {
+      "id": "tur",
+      "nameZh": "土耳其语",
+      "script": "Latin",
+      "populationM": 59,
+      "tier": "T1",
+      "mcLocales": [
+        "tr_tr"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "tr-TR"
+      },
+      "promptName": "Turkish",
+      "mcPrimaryLocale": "tr_tr",
+      "display": "Türkçe",
+      "displayRegion": "Türkiye",
+      "localeNames": {
+        "tr_tr": "Türkçe"
+      }
+    },
+    {
+      "id": "pol",
+      "nameZh": "波兰语",
+      "script": "Latin",
+      "populationM": 44,
+      "tier": "T1",
+      "mcLocales": [
+        "pl_pl",
+        "szl"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "pl-PL"
+      },
+      "promptName": "Polish",
+      "mcPrimaryLocale": "pl_pl",
+      "display": "Polski",
+      "displayRegion": "Polska",
+      "localeNames": {
+        "pl_pl": "Polski",
+        "szl": "Ślōnski"
+      }
+    },
+    {
+      "id": "ukr",
+      "nameZh": "乌克兰语",
+      "script": "Cyrillic",
+      "populationM": 41,
+      "tier": "T2",
+      "mcLocales": [
+        "ry_ua",
+        "uk_ua"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "uk-UA"
+      },
+      "promptName": "Ukrainian",
+      "mcPrimaryLocale": "uk_ua",
+      "display": "Українська",
+      "displayRegion": "Україна",
+      "localeNames": {
+        "ry_ua": "Руснацькый",
+        "uk_ua": "Українська"
+      }
+    },
+    {
+      "id": "kan",
+      "nameZh": "卡纳达语",
+      "script": "kan",
+      "populationM": 38,
+      "tier": "T2",
+      "mcLocales": [
+        "kn_in"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "kn-IN"
+      },
+      "promptName": "Kannada",
+      "mcPrimaryLocale": "kn_in",
+      "display": "ಕನ್ನಡ",
+      "displayRegion": "ಭಾರತ",
+      "localeNames": {
+        "kn_in": "ಕನ್ನಡ"
+      }
+    },
+    {
+      "id": "pes",
+      "nameZh": "波斯语",
+      "script": "Arabic",
+      "populationM": 33,
+      "tier": "T2",
+      "mcLocales": [
+        "fa_ir"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "fa-IR"
+      },
+      "promptName": "Iranian Persian",
+      "mcPrimaryLocale": "fa_ir",
+      "display": "فارسی",
+      "displayRegion": "ايران",
+      "localeNames": {
+        "fa_ir": "فارسی"
+      }
+    },
+    {
+      "id": "ron",
+      "nameZh": "罗马尼亚语",
+      "script": "Latin",
+      "populationM": 26,
+      "tier": "T2",
+      "mcLocales": [
+        "ro_ro"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "ro-RO"
+      },
+      "promptName": "Romanian",
+      "mcPrimaryLocale": "ro_ro",
+      "display": "Română",
+      "displayRegion": "România",
+      "localeNames": {
+        "ro_ro": "Română"
+      }
+    },
+    {
+      "id": "nld",
+      "nameZh": "荷兰语",
+      "script": "Latin",
+      "populationM": 21,
+      "tier": "T2",
+      "mcLocales": [
+        "brb",
+        "nl_be",
+        "nl_nl"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "nl-NL"
+      },
+      "promptName": "Dutch",
+      "mcPrimaryLocale": "nl_nl",
+      "display": "Nederlands",
+      "displayRegion": "Nederland",
+      "localeNames": {
+        "brb": "Braobans",
+        "nl_be": "Vlaams",
+        "nl_nl": "Nederlands"
+      }
+    },
+    {
+      "id": "bos",
+      "nameZh": "波斯尼亚语",
+      "script": "Cyrillic",
+      "populationM": 21,
+      "tier": "T2",
+      "mcLocales": [
+        "bs_ba"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "bs-Latn"
+      },
+      "promptName": "Bosnian (Cyrillic)",
+      "mcPrimaryLocale": "bs_ba",
+      "display": "Bosanski",
+      "displayRegion": "Bosna i Hercegovina",
+      "localeNames": {
+        "bs_ba": "Bosanski"
+      }
+    },
+    {
+      "id": "hrv",
+      "nameZh": "克罗地亚语",
+      "script": "Latin",
+      "populationM": 21,
+      "tier": "T2",
+      "mcLocales": [
+        "hr_hr"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "hr-HR"
+      },
+      "promptName": "Croatian",
+      "mcPrimaryLocale": "hr_hr",
+      "display": "Hrvatski",
+      "displayRegion": "Hrvatska",
+      "localeNames": {
+        "hr_hr": "Hrvatski"
+      }
+    },
+    {
+      "id": "srp",
+      "nameZh": "塞尔维亚语",
+      "script": "Cyrillic",
+      "populationM": 21,
+      "tier": "T2",
+      "mcLocales": [
+        "sr_cs",
+        "sr_sp"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "sr-Cyrl"
+      },
+      "promptName": "Serbian (Cyrillic)",
+      "mcPrimaryLocale": "sr_sp",
+      "display": "Српски",
+      "displayRegion": "Србија",
+      "localeNames": {
+        "sr_cs": "Srpski",
+        "sr_sp": "Српски"
+      }
+    },
+    {
+      "id": "tha",
+      "nameZh": "泰语",
+      "script": "tha",
+      "populationM": 21,
+      "tier": "T2",
+      "mcLocales": [
+        "th_th"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "th-TH"
+      },
+      "promptName": "Thai",
+      "mcPrimaryLocale": "th_th",
+      "display": "ไทย",
+      "displayRegion": "ประเทศไทย",
+      "localeNames": {
+        "th_th": "ไทย"
+      }
+    },
+    {
+      "id": "yor",
+      "nameZh": "约鲁巴语",
+      "script": "Latin",
+      "populationM": 20,
+      "tier": "T2",
+      "mcLocales": [
+        "yo_ng"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "yo-NG"
+      },
+      "promptName": "Yoruba",
+      "mcPrimaryLocale": "yo_ng",
+      "display": "Yorùbá",
+      "displayRegion": "Nàìjíríà",
+      "localeNames": {
+        "yo_ng": "Yorùbá"
+      }
+    },
+    {
+      "id": "zlm",
+      "nameZh": "马来语",
+      "script": "Arabic",
+      "populationM": 18,
+      "tier": "T2",
+      "mcLocales": [
+        "ms_my",
+        "zlm_arab"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "ms-MY"
+      },
+      "promptName": "Malay (individual language) (Arabic)",
+      "mcPrimaryLocale": "ms_my",
+      "display": "Bahasa Melayu",
+      "displayRegion": "Malaysia",
+      "localeNames": {
+        "ms_my": "Bahasa Melayu",
+        "zlm_arab": "بهاس ملايو"
+      }
+    },
+    {
+      "id": "uzn",
+      "nameZh": "乌兹别克语",
+      "script": "Cyrillic",
+      "populationM": 18,
+      "tier": "T2",
+      "mcLocales": [
+        "uz_uz"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "uz-UZ"
+      },
+      "promptName": "Northern Uzbek (Cyrillic)",
+      "mcPrimaryLocale": "uz_uz",
+      "display": "O'zbekcha",
+      "displayRegion": "O'zbekiston",
+      "localeNames": {
+        "uz_uz": "O'zbekcha"
+      }
+    },
+    {
+      "id": "ibo",
+      "nameZh": "伊博语",
+      "script": "Latin",
+      "populationM": 17,
+      "tier": "T2",
+      "mcLocales": [
+        "ig_ng"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "ig-NG"
+      },
+      "promptName": "Igbo",
+      "mcPrimaryLocale": "ig_ng",
+      "display": "Igbo",
+      "displayRegion": "Naigeria",
+      "localeNames": {
+        "ig_ng": "Igbo"
+      }
+    },
+    {
+      "id": "tgl",
+      "nameZh": "他加禄语",
+      "script": "Latin",
+      "populationM": 15,
+      "tier": "T2",
+      "mcLocales": [
+        "fil_ph",
+        "tl_ph"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "tl-PH"
+      },
+      "promptName": "Tagalog",
+      "mcPrimaryLocale": "tl_ph",
+      "display": "Tagalog",
+      "displayRegion": "Pilipinas",
+      "localeNames": {
+        "fil_ph": "Filipino",
+        "tl_ph": "Tagalog"
+      }
+    },
+    {
+      "id": "hun",
+      "nameZh": "匈牙利语",
+      "script": "Latin",
+      "populationM": 15,
+      "tier": "T2",
+      "mcLocales": [
+        "hu_hu"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "hu-HU"
+      },
+      "promptName": "Hungarian",
+      "mcPrimaryLocale": "hu_hu",
+      "display": "Magyar",
+      "displayRegion": "Magyarország",
+      "localeNames": {
+        "hu_hu": "Magyar"
+      }
+    },
+    {
+      "id": "azj",
+      "nameZh": "阿塞拜疆语",
+      "script": "Cyrillic",
+      "populationM": 14,
+      "tier": "T2",
+      "mcLocales": [
+        "az_az"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "az-Latn"
+      },
+      "promptName": "North Azerbaijani (Cyrillic)",
+      "mcPrimaryLocale": "az_az",
+      "display": "Azərbaycanca",
+      "displayRegion": "Azərbaycan",
+      "localeNames": {
+        "az_az": "Azərbaycanca"
+      }
+    },
+    {
+      "id": "ces",
+      "nameZh": "捷克语",
+      "script": "Latin",
+      "populationM": 12,
+      "tier": "T2",
+      "mcLocales": [
+        "cs_cz"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "cs-CZ"
+      },
+      "promptName": "Czech",
+      "mcPrimaryLocale": "cs_cz",
+      "display": "Čeština",
+      "displayRegion": "Česko",
+      "localeNames": {
+        "cs_cz": "Čeština"
+      }
+    },
+    {
+      "id": "ell",
+      "nameZh": "希腊语",
+      "script": "ell",
+      "populationM": 12,
+      "tier": "T2",
+      "mcLocales": [
+        "el_gr"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "el-GR"
+      },
+      "promptName": "Modern Greek (1453-)",
+      "mcPrimaryLocale": "el_gr",
+      "display": "Ελληνικά",
+      "displayRegion": "Ελλάδα",
+      "localeNames": {
+        "el_gr": "Ελληνικά"
+      }
+    },
+    {
+      "id": "bel",
+      "nameZh": "白俄罗斯语",
+      "script": "Cyrillic",
+      "populationM": 10,
+      "tier": "T2",
+      "mcLocales": [
+        "be_by",
+        "be_latn"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "be-BY"
+      },
+      "promptName": "Belarusian",
+      "mcPrimaryLocale": "be_by",
+      "display": "Беларуская",
+      "displayRegion": "Беларусь",
+      "localeNames": {
+        "be_by": "Беларуская",
+        "be_latn": "Biełaruskaja"
+      }
+    },
+    {
+      "id": "bul",
+      "nameZh": "保加利亚语",
+      "script": "Cyrillic",
+      "populationM": 9,
+      "tier": "T2",
+      "mcLocales": [
+        "bg_bg"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "bg-BG"
+      },
+      "promptName": "Bulgarian",
+      "mcPrimaryLocale": "bg_bg",
+      "display": "Български",
+      "displayRegion": "България",
+      "localeNames": {
+        "bg_bg": "Български"
+      }
+    },
+    {
+      "id": "swe",
+      "nameZh": "瑞典语",
+      "script": "Latin",
+      "populationM": 9,
+      "tier": "T2",
+      "mcLocales": [
+        "ovd",
+        "sv_se"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "sv-SE"
+      },
+      "promptName": "Swedish",
+      "mcPrimaryLocale": "sv_se",
+      "display": "Svenska",
+      "displayRegion": "Sverige",
+      "localeNames": {
+        "ovd": "Övdalska",
+        "sv_se": "Svenska"
+      }
+    },
+    {
+      "id": "kaz",
+      "nameZh": "哈萨克语",
+      "script": "Cyrillic",
+      "populationM": 8,
+      "tier": "T2",
+      "mcLocales": [
+        "kk_kz"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "kk-KZ"
+      },
+      "promptName": "Kazakh",
+      "mcPrimaryLocale": "kk_kz",
+      "display": "Қазақша",
+      "displayRegion": "Қазақстан",
+      "localeNames": {
+        "kk_kz": "Қазақша"
+      }
+    },
+    {
+      "id": "som",
+      "nameZh": "索马里语",
+      "script": "Latin",
+      "populationM": 8,
+      "tier": "T2",
+      "mcLocales": [
+        "so_so"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "so-SO"
+      },
+      "promptName": "Somali",
+      "mcPrimaryLocale": "so_so",
+      "display": "Soomaali",
+      "displayRegion": "Soomaaliya",
+      "localeNames": {
+        "so_so": "Soomaali"
+      }
+    },
+    {
+      "id": "hye",
+      "nameZh": "亚美尼亚语",
+      "script": "hye",
+      "populationM": 7,
+      "tier": "T3",
+      "mcLocales": [
+        "hy_am"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "hy-AM"
+      },
+      "promptName": "Armenian",
+      "mcPrimaryLocale": "hy_am",
+      "display": "Հայերեն",
+      "displayRegion": "Հայաստան",
+      "localeNames": {
+        "hy_am": "Հայերեն"
+      }
+    },
+    {
+      "id": "tat",
+      "nameZh": "鞑靼语",
+      "script": "Cyrillic",
+      "populationM": 7,
+      "tier": "T3",
+      "mcLocales": [
+        "tt_ru"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "tt-RU"
+      },
+      "promptName": "Tatar",
+      "mcPrimaryLocale": "tt_ru",
+      "display": "Татарча",
+      "displayRegion": "Татарстан, Рәсәй",
+      "localeNames": {
+        "tt_ru": "Татарча"
+      }
+    },
+    {
+      "id": "afr",
+      "nameZh": "南非荷兰语",
+      "script": "Latin",
+      "populationM": 6,
+      "tier": "T3",
+      "mcLocales": [
+        "af_za"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "af-ZA"
+      },
+      "promptName": "Afrikaans",
+      "mcPrimaryLocale": "af_za",
+      "display": "Afrikaans",
+      "displayRegion": "Suid-Afrika",
+      "localeNames": {
+        "af_za": "Afrikaans"
+      }
+    },
+    {
+      "id": "fin",
+      "nameZh": "芬兰语",
+      "script": "Latin",
+      "populationM": 6,
+      "tier": "T3",
+      "mcLocales": [
+        "fi_fi"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "fi-FI"
+      },
+      "promptName": "Finnish",
+      "mcPrimaryLocale": "fi_fi",
+      "display": "Suomi",
+      "displayRegion": "Suomi",
+      "localeNames": {
+        "fi_fi": "Suomi"
+      }
+    },
+    {
+      "id": "slk",
+      "nameZh": "斯洛伐克语",
+      "script": "Latin",
+      "populationM": 6,
+      "tier": "T3",
+      "mcLocales": [
+        "sk_sk"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "sk-SK"
+      },
+      "promptName": "Slovak",
+      "mcPrimaryLocale": "sk_sk",
+      "display": "Slovenčina",
+      "displayRegion": "Slovensko",
+      "localeNames": {
+        "sk_sk": "Slovenčina"
+      }
+    },
+    {
+      "id": "dan",
+      "nameZh": "丹麦语",
+      "script": "Latin",
+      "populationM": 5,
+      "tier": "T3",
+      "mcLocales": [
+        "da_dk"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "da-DK"
+      },
+      "promptName": "Danish",
+      "mcPrimaryLocale": "da_dk",
+      "display": "Dansk",
+      "displayRegion": "Danmark",
+      "localeNames": {
+        "da_dk": "Dansk"
+      }
+    },
+    {
+      "id": "heb",
+      "nameZh": "希伯来语",
+      "script": "Hebrew",
+      "populationM": 5,
+      "tier": "T3",
+      "mcLocales": [
+        "he_il"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "he-IL"
+      },
+      "promptName": "Hebrew",
+      "mcPrimaryLocale": "he_il",
+      "display": "עברית",
+      "displayRegion": "ישראל",
+      "localeNames": {
+        "he_il": "עברית"
+      }
+    },
+    {
+      "id": "nno",
+      "nameZh": "新挪威语",
+      "script": "Latin",
+      "populationM": 5,
+      "tier": "T3",
+      "mcLocales": [
+        "nn_no"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "nn-NO"
+      },
+      "promptName": "Norwegian Nynorsk",
+      "mcPrimaryLocale": "nn_no",
+      "display": "Norsk nynorsk",
+      "displayRegion": "Noreg",
+      "localeNames": {
+        "nn_no": "Norsk nynorsk"
+      }
+    },
+    {
+      "id": "nob",
+      "nameZh": "挪威语",
+      "script": "Latin",
+      "populationM": 5,
+      "tier": "T3",
+      "mcLocales": [
+        "no_no"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "nb-NO"
+      },
+      "promptName": "Norwegian Bokmål",
+      "mcPrimaryLocale": "no_no",
+      "display": "Norsk bokmål",
+      "displayRegion": "Norge",
+      "localeNames": {
+        "no_no": "Norsk bokmål"
+      }
+    },
+    {
+      "id": "als",
+      "nameZh": "阿尔巴尼亚语",
+      "script": "Latin",
+      "populationM": 5,
+      "tier": "T3",
+      "mcLocales": [
+        "sq_al"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "sq-AL"
+      },
+      "promptName": "Tosk Albanian",
+      "mcPrimaryLocale": "sq_al",
+      "display": "Shqip",
+      "displayRegion": "Shqipëri",
+      "localeNames": {
+        "sq_al": "Shqip"
+      }
+    },
+    {
+      "id": "cat",
+      "nameZh": "加泰罗尼亚语",
+      "script": "Latin",
+      "populationM": 4,
+      "tier": "T3",
+      "mcLocales": [
+        "ca_es",
+        "val_es"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "ca-ES"
+      },
+      "promptName": "Catalan",
+      "mcPrimaryLocale": "ca_es",
+      "display": "Català",
+      "displayRegion": "Catalunya",
+      "localeNames": {
+        "ca_es": "Català",
+        "val_es": "Català (Valencià)"
+      }
+    },
+    {
+      "id": "glg",
+      "nameZh": "加利西亚语",
+      "script": "Latin",
+      "populationM": 4,
+      "tier": "T3",
+      "mcLocales": [
+        "gl_es"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "gl-ES"
+      },
+      "promptName": "Galician",
+      "mcPrimaryLocale": "gl_es",
+      "display": "Galego",
+      "displayRegion": "Galicia / Galiza",
+      "localeNames": {
+        "gl_es": "Galego"
+      }
+    },
+    {
+      "id": "kat",
+      "nameZh": "格鲁吉亚语",
+      "script": "kat",
+      "populationM": 4,
+      "tier": "T3",
+      "mcLocales": [
+        "ka_ge"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "ka-GE"
+      },
+      "promptName": "Georgian",
+      "mcPrimaryLocale": "ka_ge",
+      "display": "ქართული",
+      "displayRegion": "საქართველო",
+      "localeNames": {
+        "ka_ge": "ქართული"
+      }
+    },
+    {
+      "id": "lao",
+      "nameZh": "老挝语",
+      "script": "lao",
+      "populationM": 4,
+      "tier": "T3",
+      "mcLocales": [
+        "lo_la"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "lo-LA"
+      },
+      "promptName": "Lao",
+      "mcPrimaryLocale": "lo_la",
+      "display": "ລາວ",
+      "displayRegion": "ປະເທດລາວ",
+      "localeNames": {
+        "lo_la": "ລາວ"
+      }
+    },
+    {
+      "id": "lit",
+      "nameZh": "立陶宛语",
+      "script": "Latin",
+      "populationM": 4,
+      "tier": "T3",
+      "mcLocales": [
+        "lt_lt"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "lt-LT"
+      },
+      "promptName": "Lithuanian",
+      "mcPrimaryLocale": "lt_lt",
+      "display": "Lietuvių",
+      "displayRegion": "Lietuva",
+      "localeNames": {
+        "lt_lt": "Lietuvių"
+      }
+    },
+    {
+      "id": "vec",
+      "nameZh": "威尼斯语",
+      "script": "Latin",
+      "populationM": 4,
+      "tier": "T3",
+      "mcLocales": [
+        "vec_it"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": null
+      },
+      "promptName": "Venetian",
+      "mcPrimaryLocale": "vec_it",
+      "display": "Vèneto",
+      "displayRegion": "Veneto",
+      "localeNames": {
+        "vec_it": "Vèneto"
+      }
+    },
+    {
+      "id": "kir",
+      "nameZh": "吉尔吉斯语",
+      "script": "Cyrillic",
+      "populationM": 3,
+      "tier": "T3",
+      "mcLocales": [
+        "ky_kg"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "ky-KG"
+      },
+      "promptName": "Kirghiz",
+      "mcPrimaryLocale": "ky_kg",
+      "display": "Кыргызча",
+      "displayRegion": "Кыргызстан",
+      "localeNames": {
+        "ky_kg": "Кыргызча"
+      }
+    },
+    {
+      "id": "mkd",
+      "nameZh": "马其顿语",
+      "script": "Cyrillic",
+      "populationM": 3,
+      "tier": "T3",
+      "mcLocales": [
+        "mk_mk"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "mk-MK"
+      },
+      "promptName": "Macedonian",
+      "mcPrimaryLocale": "mk_mk",
+      "display": "Македонски",
+      "displayRegion": "Северна Македонија",
+      "localeNames": {
+        "mk_mk": "Македонски"
+      }
+    },
+    {
+      "id": "nds",
+      "nameZh": "低地德语",
+      "script": "Latin",
+      "populationM": 3,
+      "tier": "T3",
+      "mcLocales": [
+        "nds_de"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": null
+      },
+      "promptName": "Low German",
+      "mcPrimaryLocale": "nds_de",
+      "display": "Plattdüütsch",
+      "displayRegion": "Düütschland",
+      "localeNames": {
+        "nds_de": "Plattdüütsch"
+      }
+    },
+    {
+      "id": "ydd",
+      "nameZh": "意第绪语",
+      "script": "Hebrew",
+      "populationM": 3,
+      "tier": "T3",
+      "mcLocales": [
+        "yi_de"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "yi-DE"
+      },
+      "promptName": "Eastern Yiddish",
+      "mcPrimaryLocale": "yi_de",
+      "display": "ייִדיש",
+      "displayRegion": "אשכנזיש יידן",
+      "localeNames": {
+        "yi_de": "ייִדיש"
+      }
+    },
+    {
+      "id": "epo",
+      "nameZh": "世界语",
+      "script": "Latin",
+      "populationM": 2,
+      "tier": "T3",
+      "mcLocales": [
+        "eo_uy"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "eo"
+      },
+      "promptName": "Esperanto",
+      "mcPrimaryLocale": "eo_uy",
+      "display": "Esperanto",
+      "displayRegion": "Esperantujo",
+      "localeNames": {
+        "eo_uy": "Esperanto"
+      }
+    },
+    {
+      "id": "lvs",
+      "nameZh": "拉脱维亚语",
+      "script": "Latin",
+      "populationM": 2,
+      "tier": "T3",
+      "mcLocales": [
+        "lv_lv"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "lv-LV"
+      },
+      "promptName": "Standard Latvian",
+      "mcPrimaryLocale": "lv_lv",
+      "display": "Latviešu",
+      "displayRegion": "Latvija",
+      "localeNames": {
+        "lv_lv": "Latviešu"
+      }
+    },
+    {
+      "id": "khk",
+      "nameZh": "蒙古语",
+      "script": "Cyrillic",
+      "populationM": 2,
+      "tier": "T3",
+      "mcLocales": [
+        "mn_mn"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "mn-MN"
+      },
+      "promptName": "Halh Mongolian",
+      "mcPrimaryLocale": "mn_mn",
+      "display": "Монгол",
+      "displayRegion": "Монгол Улс",
+      "localeNames": {
+        "mn_mn": "Монгол"
+      }
+    },
+    {
+      "id": "slv",
+      "nameZh": "斯洛文尼亚语",
+      "script": "Latin",
+      "populationM": 2,
+      "tier": "T3",
+      "mcLocales": [
+        "sl_si"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "sl-SI"
+      },
+      "promptName": "Slovenian",
+      "mcPrimaryLocale": "sl_si",
+      "display": "Slovenščina",
+      "displayRegion": "Slovenija",
+      "localeNames": {
+        "sl_si": "Slovenščina"
+      }
+    },
+    {
+      "id": "ekk",
+      "nameZh": "爱沙尼亚语",
+      "script": "Latin",
+      "populationM": 1,
+      "tier": "T3",
+      "mcLocales": [
+        "et_ee",
+        "vro"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "et-EE"
+      },
+      "promptName": "Estonian",
+      "mcPrimaryLocale": "et_ee",
+      "display": "Eesti keel",
+      "displayRegion": "Eesti",
+      "localeNames": {
+        "et_ee": "Eesti keel",
+        "vro": "Võro"
+      }
+    },
+    {
+      "id": "oci",
+      "nameZh": "奥克语",
+      "script": "Latin",
+      "populationM": 0.855,
+      "tier": "T3",
+      "mcLocales": [
+        "oc_fr"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "oc-FR"
+      },
+      "promptName": "Occitan (post 1500)",
+      "mcPrimaryLocale": "oc_fr",
+      "display": "Occitan",
+      "displayRegion": "Occitània",
+      "localeNames": {
+        "oc_fr": "Occitan"
+      }
+    },
+    {
+      "id": "fry",
+      "nameZh": "西弗里斯兰语",
+      "script": "Latin",
+      "populationM": 0.73,
+      "tier": "T3",
+      "mcLocales": [
+        "fy_nl"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "fy-NL"
+      },
+      "promptName": "Western Frisian",
+      "mcPrimaryLocale": "fy_nl",
+      "display": "Frysk",
+      "displayRegion": "Fryslân",
+      "localeNames": {
+        "fy_nl": "Frysk"
+      }
+    },
+    {
+      "id": "fur",
+      "nameZh": "弗留利语",
+      "script": "Latin",
+      "populationM": 0.6,
+      "tier": "T3",
+      "mcLocales": [
+        "fur_it"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": null
+      },
+      "promptName": "Friulian",
+      "mcPrimaryLocale": "fur_it",
+      "display": "Furlan",
+      "displayRegion": "Friûl",
+      "localeNames": {
+        "fur_it": "Furlan"
+      }
+    },
+    {
+      "id": "eus",
+      "nameZh": "巴斯克语",
+      "script": "Latin",
+      "populationM": 0.588,
+      "tier": "T3",
+      "mcLocales": [
+        "eu_es"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "eu-ES"
+      },
+      "promptName": "Basque",
+      "mcPrimaryLocale": "eu_es",
+      "display": "Euskara",
+      "displayRegion": "Euskal Herria",
+      "localeNames": {
+        "eu_es": "Euskara"
+      }
+    },
+    {
+      "id": "cym",
+      "nameZh": "威尔士语",
+      "script": "Latin",
+      "populationM": 0.58,
+      "tier": "T3",
+      "mcLocales": [
+        "cy_gb"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "cy-GB"
+      },
+      "promptName": "Welsh",
+      "mcPrimaryLocale": "cy_gb",
+      "display": "Cymraeg",
+      "displayRegion": "Cymru",
+      "localeNames": {
+        "cy_gb": "Cymraeg"
+      }
+    },
+    {
+      "id": "bre",
+      "nameZh": "布列塔尼语",
+      "script": "Latin",
+      "populationM": 0.5,
+      "tier": "T3",
+      "mcLocales": [
+        "br_fr"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "br-FR"
+      },
+      "promptName": "Breton",
+      "mcPrimaryLocale": "br_fr",
+      "display": "Brezhoneg",
+      "displayRegion": "Breizh",
+      "localeNames": {
+        "br_fr": "Brezhoneg"
+      }
+    },
+    {
+      "id": "sah",
+      "nameZh": "雅库特语",
+      "script": "Cyrillic",
+      "populationM": 0.363,
+      "tier": "T3",
+      "mcLocales": [
+        "sah_sah"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": null
+      },
+      "promptName": "Yakut",
+      "mcPrimaryLocale": "sah_sah",
+      "display": "Сахалыы",
+      "displayRegion": "Cаха Сирэ",
+      "localeNames": {
+        "sah_sah": "Сахалыы"
+      }
+    },
+    {
+      "id": "ltz",
+      "nameZh": "卢森堡语",
+      "script": "Latin",
+      "populationM": 0.336,
+      "tier": "T3",
+      "mcLocales": [
+        "lb_lu"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "lb-LU"
+      },
+      "promptName": "Luxembourgish",
+      "mcPrimaryLocale": "lb_lu",
+      "display": "Lëtzebuergesch",
+      "displayRegion": "Lëtzebuerg",
+      "localeNames": {
+        "lb_lu": "Lëtzebuergesch"
+      }
+    },
+    {
+      "id": "mlt",
+      "nameZh": "马耳他语",
+      "script": "Latin",
+      "populationM": 0.33,
+      "tier": "T3",
+      "mcLocales": [
+        "mt_mt"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "mt-MT"
+      },
+      "promptName": "Maltese",
+      "mcPrimaryLocale": "mt_mt",
+      "display": "Malti",
+      "displayRegion": "Malta",
+      "localeNames": {
+        "mt_mt": "Malti"
+      }
+    },
+    {
+      "id": "isl",
+      "nameZh": "冰岛语",
+      "script": "Latin",
+      "populationM": 0.283,
+      "tier": "T3",
+      "mcLocales": [
+        "is_is"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "is-IS"
+      },
+      "promptName": "Icelandic",
+      "mcPrimaryLocale": "is_is",
+      "display": "Íslenska",
+      "displayRegion": "Ísland",
+      "localeNames": {
+        "is_is": "Íslenska"
+      }
+    },
+    {
+      "id": "gle",
+      "nameZh": "爱尔兰语",
+      "script": "Latin",
+      "populationM": 0.26,
+      "tier": "T3",
+      "mcLocales": [
+        "ga_ie"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": "ga-IE"
+      },
+      "promptName": "Irish",
+      "mcPrimaryLocale": "ga_ie",
+      "display": "Gaeilge",
+      "displayRegion": "Éire",
+      "localeNames": {
+        "ga_ie": "Gaeilge"
+      }
+    },
+    {
+      "id": "tzo",
+      "nameZh": "索西语",
+      "script": "Latin",
+      "populationM": 0.13,
+      "tier": "T3",
+      "mcLocales": [
+        "tzo_mx"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": null
+      },
+      "promptName": "Tzotzil",
+      "mcPrimaryLocale": "tzo_mx",
+      "display": "Bats'i k'op",
+      "displayRegion": "Jobel",
+      "localeNames": {
+        "tzo_mx": "Bats'i k'op"
+      }
+    },
+    {
+      "id": "ast",
+      "nameZh": "阿斯图里亚斯语",
+      "script": "Latin",
+      "populationM": 0.1,
+      "tier": "T3",
+      "mcLocales": [
+        "ast_es"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": null
+      },
+      "promptName": "Asturian",
+      "mcPrimaryLocale": "ast_es",
+      "display": "Asturianu",
+      "displayRegion": "Asturies",
+      "localeNames": {
+        "ast_es": "Asturianu"
+      }
+    },
+    {
+      "id": "gla",
+      "nameZh": "苏格兰盖尔语",
+      "script": "Latin",
+      "populationM": 0.064,
+      "tier": "T3",
+      "mcLocales": [
+        "gd_gb"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": null
+      },
+      "promptName": "Scottish Gaelic",
+      "mcPrimaryLocale": "gd_gb",
+      "display": "Gàidhlig",
+      "displayRegion": "Alba",
+      "localeNames": {
+        "gd_gb": "Gàidhlig"
+      }
+    },
+    {
+      "id": "fao",
+      "nameZh": "法罗语",
+      "script": "Latin",
+      "populationM": 0.047,
+      "tier": "T3",
+      "mcLocales": [
+        "fo_fo"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": null
+      },
+      "promptName": "Faroese",
+      "mcPrimaryLocale": "fo_fo",
+      "display": "Føroyskt",
+      "displayRegion": "Føroyar",
+      "localeNames": {
+        "fo_fo": "Føroyskt"
+      }
+    },
+    {
+      "id": "haw",
+      "nameZh": "夏威夷语",
+      "script": "Latin",
+      "populationM": 0.008,
+      "tier": "T3",
+      "mcLocales": [
+        "haw_us"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": null
+      },
+      "promptName": "Hawaiian",
+      "mcPrimaryLocale": "haw_us",
+      "display": "ʻŌlelo Hawaiʻi",
+      "displayRegion": "Hawaiʻi",
+      "localeNames": {
+        "haw_us": "ʻŌlelo Hawaiʻi"
+      }
+    },
+    {
+      "id": "sme",
+      "nameZh": "北萨米语",
+      "script": "Latin",
+      "populationM": 0.004,
+      "tier": "T3",
+      "mcLocales": [
+        "se_no"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": null
+      },
+      "promptName": "Northern Sami",
+      "mcPrimaryLocale": "se_no",
+      "display": "Davvisámegiella",
+      "displayRegion": "Sápmi",
+      "localeNames": {
+        "se_no": "Davvisámegiella"
+      }
+    },
+    {
+      "id": "chv",
+      "nameZh": "楚瓦什语",
+      "script": "Cyrillic",
+      "populationM": null,
+      "tier": "T3",
+      "mcLocales": [
+        "cv_cu"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": null
+      },
+      "promptName": "Chuvash",
+      "mcPrimaryLocale": "cv_cu",
+      "display": "Чӑвашла",
+      "displayRegion": "Чӑваш Ен, Раҫҫей",
+      "localeNames": {
+        "cv_cu": "Чӑвашла"
+      }
+    },
+    {
+      "id": "ido",
+      "nameZh": "伊多语",
+      "script": "Latin",
+      "populationM": null,
+      "tier": "T3",
+      "mcLocales": [
+        "io_en"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": null
+      },
+      "promptName": "Ido",
+      "mcPrimaryLocale": "io_en",
+      "display": "Ido",
+      "displayRegion": "Idia",
+      "localeNames": {
+        "io_en": "Ido"
+      }
+    },
+    {
+      "id": "lat",
+      "nameZh": "拉丁语",
+      "script": "Latin",
+      "populationM": null,
+      "tier": "T3",
+      "mcLocales": [
+        "la_la"
+      ],
+      "providers": {
+        "hunyuan": false,
+        "deepseek": true,
+        "bilibili": true,
+        "mymemory": null
+      },
+      "promptName": "Latin",
+      "mcPrimaryLocale": "la_la",
+      "display": "Latina",
+      "displayRegion": "Latium",
+      "localeNames": {
+        "la_la": "Latina"
+      }
+    }
+  ],
+  "unsupportedLocales": [
+    "ba_ru",
+    "fra_de",
+    "go_fr",
+    "got_de",
+    "hal_ua",
+    "hn_no",
+    "isv",
+    "jbo_en",
+    "kw_gb",
+    "li_li",
+    "lol_us",
+    "nah",
+    "pls",
+    "qcb_es",
+    "qid",
+    "qya_aa",
+    "tlh_aa",
+    "tok",
+    "vp_vl"
+  ],
+  "localeToId": {
+    "af_za": "afr",
+    "ar_sa": "arb",
+    "ast_es": "ast",
+    "az_az": "azj",
+    "bar": "deu",
+    "be_by": "bel",
+    "be_latn": "bel",
+    "bg_bg": "bul",
+    "br_fr": "bre",
+    "brb": "nld",
+    "bs_ba": "bos",
+    "ca_es": "cat",
+    "cs_cz": "ces",
+    "cv_cu": "chv",
+    "cy_gb": "cym",
+    "da_dk": "dan",
+    "de_at": "deu",
+    "de_ch": "deu",
+    "de_de": "deu",
+    "el_gr": "ell",
+    "en_au": "eng",
+    "en_ca": "eng",
+    "en_gb": "eng",
+    "en_nz": "eng",
+    "en_pt": "eng",
+    "en_ud": "eng",
+    "en_us": "eng",
+    "enp": "eng",
+    "enws": "eng",
+    "eo_uy": "epo",
+    "es_ar": "spa",
+    "es_cl": "spa",
+    "es_ec": "spa",
+    "es_es": "spa",
+    "es_mx": "spa",
+    "es_uy": "spa",
+    "es_ve": "spa",
+    "esan": "spa",
+    "et_ee": "ekk",
+    "eu_es": "eus",
+    "fa_ir": "pes",
+    "fi_fi": "fin",
+    "fil_ph": "tgl",
+    "fo_fo": "fao",
+    "fr_ca": "fra",
+    "fr_ch": "fra",
+    "fr_fr": "fra",
+    "fur_it": "fur",
+    "fy_nl": "fry",
+    "ga_ie": "gle",
+    "gd_gb": "gla",
+    "gl_es": "glg",
+    "haw_us": "haw",
+    "he_il": "heb",
+    "hi_in": "hin",
+    "hr_hr": "hrv",
+    "hu_hu": "hun",
+    "hy_am": "hye",
+    "id_id": "ind",
+    "ig_ng": "ibo",
+    "io_en": "ido",
+    "is_is": "isl",
+    "it_it": "ita",
+    "ja_jp": "jpn",
+    "ka_ge": "kat",
+    "kk_kz": "kaz",
+    "kn_in": "kan",
+    "ko_kr": "kor",
+    "ksh": "deu",
+    "ky_kg": "kir",
+    "la_la": "lat",
+    "lb_lu": "ltz",
+    "lmo": "ita",
+    "lo_la": "lao",
+    "lt_lt": "lit",
+    "lv_lv": "lvs",
+    "lzh": "cmn",
+    "mk_mk": "mkd",
+    "mn_mn": "khk",
+    "ms_my": "zlm",
+    "mt_mt": "mlt",
+    "nds_de": "nds",
+    "nl_be": "nld",
+    "nl_nl": "nld",
+    "nn_no": "nno",
+    "no_no": "nob",
+    "oc_fr": "oci",
+    "ovd": "swe",
+    "pl_pl": "pol",
+    "pt_br": "por",
+    "pt_pt": "por",
+    "ro_ro": "ron",
+    "rpr": "rus",
+    "ru_ru": "rus",
+    "ry_ua": "ukr",
+    "sah_sah": "sah",
+    "se_no": "sme",
+    "sk_sk": "slk",
+    "sl_si": "slv",
+    "so_so": "som",
+    "sq_al": "als",
+    "sr_cs": "srp",
+    "sr_sp": "srp",
+    "sv_se": "swe",
+    "sxu": "deu",
+    "szl": "pol",
+    "ta_in": "tam",
+    "th_th": "tha",
+    "tl_ph": "tgl",
+    "tr_tr": "tur",
+    "tt_ru": "tat",
+    "tzo_mx": "tzo",
+    "uk_ua": "ukr",
+    "uz_uz": "uzn",
+    "val_es": "cat",
+    "vec_it": "vec",
+    "vi_vn": "vie",
+    "vro": "ekk",
+    "yi_de": "ydd",
+    "yo_ng": "yor",
+    "zh_cn": "cmn",
+    "zh_hk": "cmn",
+    "zh_tw": "cmn",
+    "zlm_arab": "zlm"
+  },
+  "notes": {
+    "display": "显示名取自 MC 原生 language.name（assets 里的真实数据）",
+    "promptName": "OpenAI 兼容源的语言名，用英文（MC 的原生名是该语言自己的写法，不能发给模型）",
+    "hunyuan": "本地模型，实测仅支持中文/英文；false = 该语言走云端",
+    "deepseek": "云端，全语言支持",
+    "bilibili": "实测中英文语言名效果一致，用 promptName 即可",
+    "mymemory": "null = 该源不支持此语言",
+    "defaultLocales": "MC 的默认语言（如 en_us）不在 assets/lang 里，由 LanguageRegistry 补齐"
+  }
+}

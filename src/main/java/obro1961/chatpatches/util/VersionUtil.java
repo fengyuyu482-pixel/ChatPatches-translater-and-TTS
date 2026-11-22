@@ -1,6 +1,7 @@
 package obro1961.chatpatches.util;
 
 import com.google.gson.JsonElement;
+import com.mojang.authlib.GameProfile;
 import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.JsonOps;
 import net.minecraft.client.Minecraft;
@@ -30,7 +31,7 @@ public class VersionUtil {
 	private static ClientLevel backup;
 
 	static Minecraft mc() { return Minecraft.getInstance(); }
-	static ChatComponent chat() { return mc().gui.hud.getChat(); }
+	static ChatComponent chat() { return mc().gui.getChat(); }
 
 	/**
 	 * Returns {@link JsonOps#INSTANCE} registry-backed according to {@link
@@ -64,6 +65,32 @@ public class VersionUtil {
 		//?}
 	}
 
+	/** GameProfile 取名字：authlib 6（1.21.9 起）是 {@code name()}，之前是 {@code getName()}。 */
+	public static String profileName(GameProfile profile) {
+		//? if >=1.21.9 {
+		return profile.name();
+		//?} else {
+		/*return profile.getName();
+		*///?}
+	}
+
+	/**
+	 * GameProfile 取 UUID 字符串：authlib 6（1.21.9 起）是 {@code id()}，之前是 {@code getId()}。
+	 *
+	 * <p>和 {@link #profileName} 同一个坑：authlib 6 把 GameProfile 改成了 record，
+	 * 访问器从 {@code getId()} 变成 {@code id()}。跨版本必须走这一处，
+	 * 否则低版本编译不过（反过来也一样）。
+	 *
+	 * <p>拿不到 profile 时不在这里兜底 —— 调用方自己判 null 并留空，
+	 * 因为"写一个假 UUID"比"没有 UUID"更糟（以后按玩家回溯会信错）。
+	 */
+	public static String profileUuid(GameProfile profile) {
+		//? if >=1.21.9 {
+		return String.valueOf(profile.id());
+		//?} else {
+		/*return String.valueOf(profile.getId());
+		*///?}
+	}
 	//? if >=1.21.11 {
 	public static double screenToChatX(double x) {
 		return x / chat().getScale() - 4.0;
@@ -149,3 +176,5 @@ public class VersionUtil {
 	}*/
 	/*?}*/
 }
+
+

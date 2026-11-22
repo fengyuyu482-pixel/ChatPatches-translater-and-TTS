@@ -7,8 +7,8 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.ChatComponent;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.multiplayer.chat.GuiMessage;
-import net.minecraft.client.multiplayer.chat.GuiMessageTag;
+import net.minecraft.client.GuiMessage;
+import net.minecraft.client.GuiMessageTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MessageSignature;
 import obro1961.chatpatches.ChatLog;
@@ -32,8 +32,8 @@ import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 //import com.llamalad7.mixinextras.sugar.Local;
 //?}
 //? if >=26.1 {
-import net.minecraft.client.multiplayer.chat.GuiMessageSource;
-//?}
+/*import net.minecraft.client.GuiMessageSource;
+*///?}
 //? if >=1.21.11 {
 import obro1961.chatpatches.util.VersionUtil;
 //?}
@@ -52,13 +52,13 @@ public abstract class ChatComponentMixin implements ChatComponentAccess {
     @Unique
     private static final String ADD_MESSAGE_TARGET_REFERENCE =
         "addMessage(Lnet/minecraft/network/chat/Component;Lnet/minecraft/network/chat/MessageSignature;"
-            + /*? if <=1.20.4 {*//*"I" +*//*?} elif >=26.1 {*/"Lnet/minecraft/client/multiplayer/chat/GuiMessageSource;" +/*?}*/ "Lnet/minecraft/client/" + /*? if >=26.1 {*/"multiplayer/chat/" +/*?}*/ "GuiMessageTag;"
+            + /*? if <=1.20.4 {*//*"I" +*//*?} elif >=26.1 {*//*"Lnet/minecraft/client/multiplayer/chat/GuiMessageSource;" +*//*?}*/ "Lnet/minecraft/client/" + /*? if >=26.1 {*//*"multiplayer/chat/" +*//*?}*/ "GuiMessageTag;"
             + /*? if <=1.20.4 {*//*"Z" +*//*?}*/ ")V";
 
     @Shadow @Final public List<GuiMessage> allMessages;
     @Shadow @Final public List<GuiMessage.Line> trimmedMessages;
 
-    @Shadow @Final /*? if != 1.21.11 {*/private/*?}*/ Minecraft minecraft;
+    @Shadow @Final /*? if != 1.21.11 {*//*private*//*?}*/ Minecraft minecraft;
     @Shadow @Final private List<?> messageDeletionQueue;
 
 	//? if <1.21.11 {
@@ -133,7 +133,7 @@ public abstract class ChatComponentMixin implements ChatComponentAccess {
         if(!config.vanillaClearing) {
             // Clear message using F3+D
             if(!history) {
-                minecraft./*? if >26.1.2 {*/gui.chatListener/*?} else {*//*getChatListener*//*?}*/()./*? if >=1.21.9 {*/flushQueue/*?} else {*//*clearQueue*//*?}*/();
+                minecraft./*? if >26.1.2 {*//*gui.chatListener*//*?} else {*/getChatListener/*?}*/()./*? if >=1.21.9 {*/flushQueue/*?} else {*//*clearQueue*//*?}*/();
                 messageDeletionQueue.clear();
                 allMessages.clear();
                 trimmedMessages.clear();
@@ -158,7 +158,9 @@ public abstract class ChatComponentMixin implements ChatComponentAccess {
         at = @At(value = "CONSTANT", args = "intValue=100")
     )
     private int moreMessages(int hundred) {
-        return config.chatMaxMessages;
+        // ★ 0 = 不限（D4）。这里原样返回 0 会被原版当成"最多保留 0 条"，
+        //   所以 0 必须翻译成 Integer.MAX_VALUE，而不是把配置值直接丢回去。
+        return config.chatMaxMessages > 0 ? config.chatMaxMessages : Integer.MAX_VALUE;
     }
 
     /**
@@ -190,8 +192,8 @@ public abstract class ChatComponentMixin implements ChatComponentAccess {
      */
     @SuppressWarnings("ModifyVariableMayUseName") // name is not consistent b/w versions
 	@ModifyVariable(
-		method = "extractRenderState" /*? if >=1.21.11 {*/ +
-            /*~ if >=26.1 'Z' -> 'Lnet/minecraft/client/gui/components/ChatComponent$DisplayMode;' {*/"(Lnet/minecraft/client/gui/components/ChatComponent$ChatGraphicsAccess;IILnet/minecraft/client/gui/components/ChatComponent$DisplayMode;)V"/*~}*/
+		method = "render" /*? if >=1.21.11 {*/ +
+            /*~ if >=26.1 'Z' -> 'Lnet/minecraft/client/gui/components/ChatComponent$DisplayMode;' {*/"(Lnet/minecraft/client/gui/components/ChatComponent$ChatGraphicsAccess;IIZ)V"/*~}*/
         /*?}*/,
 		at = @At("STORE"), // targets ALL store insns for this variable
 		ordinal = /*? if >=1.21.11 {*/ 4 /*?} else {*//* 7 *//*?}*/,
@@ -236,7 +238,7 @@ public abstract class ChatComponentMixin implements ChatComponentAccess {
 		Component message,
 		MessageSignature signature,
 		/*? if <=1.20.4 {*//*int addedTime,*//*?}*/
-		/*? if >=26.1 {*/GuiMessageSource source,/*?}*/
+		/*? if >=26.1 {*//*GuiMessageSource source,*//*?}*/
 		GuiMessageTag tag
 		/*? if <=1.20.4 {*//*, boolean refreshing*//*?}*/,
 		CallbackInfo ci
@@ -245,7 +247,7 @@ public abstract class ChatComponentMixin implements ChatComponentAccess {
 			message,
 			signature,
 			/*? if <=1.20.4 {*//*addedTime,*//*?}*/
-			/*? if >=26.1 {*/source,/*?}*/
+			/*? if >=26.1 {*//*source,*//*?}*/
 			tag
 			/*? if <=1.20.4 {*//*, refreshing*//*?}*/
 		)) {
@@ -255,7 +257,7 @@ public abstract class ChatComponentMixin implements ChatComponentAccess {
 
     @ModifyVariable(method = ADD_MESSAGE_TARGET_REFERENCE, at = @At("HEAD"), argsOnly = true)
     private Component modifyMessage(Component m /*? if <=1.20.4 {*//*, @Local(argsOnly = true) boolean refreshing*//*?}*/) {
-		return ChatLog.isLoading() /*? if <=1.20.4 {*//* || refreshing *//*?}*/ ? m : ChatUtil.modifyMessage(m);
+		return (ChatLog.isLoading() || obro1961.chatpatches.chatstudy.ChatStudyBridge.isRestoring()) /*? if <=1.20.4 {*//* || refreshing *//*?}*/ ? m : ChatUtil.modifyMessage(m);
     }
 
     @Inject(

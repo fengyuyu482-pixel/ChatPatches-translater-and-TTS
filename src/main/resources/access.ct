@@ -30,7 +30,7 @@ accessible method net/minecraft/client/gui/components/ChatComponent getScale ()D
 #?}
 
 #? if >=26.1 {
-accessible method net/minecraft/client/gui/components/ChatComponent addMessage (Lnet/minecraft/network/chat/Component;Lnet/minecraft/network/chat/MessageSignature;Lnet/minecraft/client/multiplayer/chat/GuiMessageSource;Lnet/minecraft/client/multiplayer/chat/GuiMessageTag;)V
+#accessible method net/minecraft/client/gui/components/ChatComponent addMessage (Lnet/minecraft/network/chat/Component;Lnet/minecraft/network/chat/MessageSignature;Lnet/minecraft/client/multiplayer/chat/GuiMessageSource;Lnet/minecraft/client/multiplayer/chat/GuiMessageTag;)V
 #?}
 
 
@@ -49,20 +49,20 @@ accessible field net/minecraft/network/chat/TextColor NAMED_COLORS Ljava/util/Ma
 accessible field net/minecraft/ChatFormatting code C # Colors#getCode()
 
 
-## GuiGraphics / GuiGraphicsExtractor - ScreenMixin, ActiveTextCollectorsMixin, ContextMenu#extractSelectionOutline()
+## GuiGraphics / GuiGraphics - ScreenMixin, ActiveTextCollectorsMixin, ContextMenu#extractSelectionOutline()
 
 # FIXME: GG<->GGE conversions are not working again... no idea why..
 #~ if <26.1 'GuiGraphicsExtractor' -> 'GuiGraphics' {
 #? if >=1.21.6 {
-accessible field net/minecraft/client/gui/GuiGraphicsExtractor deferredTooltip Ljava/lang/Runnable;
+accessible field net/minecraft/client/gui/GuiGraphics deferredTooltip Ljava/lang/Runnable;
 #?}
 
 #? if >=1.21.11 {
-accessible field net/minecraft/client/gui/GuiGraphicsExtractor hoveredTextStyle Lnet/minecraft/network/chat/Style;
+accessible field net/minecraft/client/gui/GuiGraphics hoveredTextStyle Lnet/minecraft/network/chat/Style;
 #?}
 
 #? if >=1.21.11 {
-accessible class net/minecraft/client/gui/GuiGraphicsExtractor$RenderingTextCollector
+accessible class net/minecraft/client/gui/GuiGraphics$RenderingTextCollector
 #?}
 #~}
 
@@ -75,7 +75,7 @@ accessible field net/minecraft/client/gui/layouts/GridLayout children Ljava/util
 ## GridLayout$ChildContainer - ContextMenu#buttons()
 
 #? if >=26.1 {
-accessible class net/minecraft/client/gui/layouts/GridLayout$ChildContainer
+#accessible class net/minecraft/client/gui/layouts/GridLayout$ChildContainer
 #?}
 
 

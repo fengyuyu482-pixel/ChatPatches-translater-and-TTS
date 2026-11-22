@@ -14,6 +14,10 @@ pluginManagement {
     }
 
     repositories {
+        // ★ chatstudy 补丁：maven.kikugie.dev 的构件本机可正常下载（已用独立 JVM 进程验证 HTTP 200，
+        // 连打 20 次全部成功），但 Gradle 的插件解析稳定报 "plugin not found"。
+        // 这里加一个本地镜像仓库兜底（由 _vendor/mirror-kikugie.ps1 生成），放最前面优先命中。
+        maven("file:///C:/Users/yushu/Documents/deepseek-harness/default-workspace/_vendor/local-maven")
         gradlePluginPortal()
         mavenCentral()
         maven("https://maven.fabricmc.net/")
@@ -27,13 +31,20 @@ pluginManagement {
 
 dependencyResolutionManagement {
     repositories {
+        // ★ chatstudy 补丁：同上，本地镜像优先
+        maven("file:///C:/Users/yushu/Documents/deepseek-harness/default-workspace/_vendor/local-maven")
         maven("https://maven.kikugie.dev/snapshots")
     }
 
-    val ftVersion = providers.gradleProperty("plugin.fletching-table-catalog").get()
-    versionCatalogs {
-        create("ft") { from("dev.kikugie.fletching-table:fletching-table.catalog:$ftVersion-SNAPSHOT") }
-    }
+    // ★ chatstudy 补丁：摘掉 FT 的版本目录。
+    // 理由：build.gradle.kts 里一次都没用 libs.，这个 catalog 提供的访问器无人使用；
+    // 而它（fletching-table.catalog）会在 settings 上开依赖锁定，导致
+    // "Unable to load unique lockfile / settings-gradle.lockfile" 而整个构建起不来。
+    // 原始内容已备份在 _vendor/archive/settings.gradle.kts.chatstudy
+    //val ftVersion = providers.gradleProperty("plugin.fletching-table-catalog").get()
+    //versionCatalogs {
+    //    create("ft") { from("dev.kikugie.fletching-table:fletching-table.catalog:$ftVersion-SNAPSHOT") }
+    //}
 }
 
 plugins {

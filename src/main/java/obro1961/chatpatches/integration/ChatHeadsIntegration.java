@@ -96,7 +96,7 @@ public class ChatHeadsIntegration {
 	 */
 	public static Optional<MutableComponent> extractHeadComponent(Component message) {
 		// in 26.1+ that comma and underscore is needed for whatever reason - some new J25 feature ig
-		if(message.getContents() instanceof ObjectContents(PlayerSprite ignored /*? if >=26.1 {*/, _/*?}*/)) {
+		if(message.getContents() instanceof ObjectContents(PlayerSprite ignored /*? if >=26.1 {*//*, _*//*?}*/)) {
 			return Optional.of((MutableComponent) message);
 		}
 

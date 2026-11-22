@@ -43,8 +43,8 @@ import net.minecraft.util.NullOps;
 //import com.mojang.serialization.JsonOps;
 //?}
 //? if >=26.3 {
-import com.mojang.blaze3d.Blaze3D;
-//?}
+/*import com.mojang.blaze3d.Blaze3D;
+*///?}
 
 /**
  * @apiNote This is the second edition of a config menu using external
@@ -122,7 +122,7 @@ public class YaclConfig extends Config {
                         //  need to like make a whole new method or something that only updates the message components on refresh, which is plausible
                         //  but is not an effortless change. (ex. take timestamp and regenerate time text, take player regen name, etc) not on chatlog#restore
                         cat.equals("counter") || cat.equals("compact")
-                            ? new OptionFlag[] { client -> client.gui.hud.getChat().rescaleChat() }
+                            ? new OptionFlag[] { client -> client.gui.getChat().rescaleChat() }
                             : new OptionFlag[0]
                     )
                     /*? if >=1.21.9 {*/
@@ -302,9 +302,9 @@ public class YaclConfig extends Config {
                     case "chatlogBackup" -> ChatLog.backup();
                     case "chatlogOpenFolder" ->
 						//? if >=26.3 {
-						Blaze3D.openPath(ChatLog.PATH.getParent());
-						//?} else {
-						//Util.getPlatform().openFile(ChatLog.PATH.getParent().toFile());
+						/*Blaze3D.openPath(ChatLog.PATH.getParent());
+						*///?} else {
+						Util.getPlatform().openFile(ChatLog.PATH.getParent().toFile());
 						//?}
                     case "help.reloadConfig" -> deserialize();
                 }
